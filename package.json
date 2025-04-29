@@ -1,0 +1,31 @@
+{
+  "name": "@diplodoc/algolia",
+  "version": "0.4.0",
+  "description": "Algolia search integration extension for Diplodoc",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src --ext .ts",
+    "format": "prettier --write \"src/**/*.ts\""
+  },
+  "dependencies": {
+    "@diplodoc/search-extension": "^1.0.0",
+    "algoliasearch": "^5.0.0",
+    "cheerio": "^1.0.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@diplodoc/cli": "^4.57.8",
+    "@diplodoc/lint": "^1.2.1",
+    "@diplodoc/tsconfig": "^1.0.2",
+    "@types/lodash": "^4.14.202",
+    "@types/node": "^18.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "@diplodoc/cli": "^4.57.8"
+  }
+}
