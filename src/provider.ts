@@ -71,7 +71,7 @@ export class AlgoliaProvider {
     async add(
         path: string,
         lang: string,
-        info: { html?: string; title?: string; meta?: { noIndex?: boolean } },
+        info: { html?: string; title?: string; meta?: { noIndex?: boolean; keywords?: string[]; title?: string; description?: string } },
     ) {
         if (!info.html) {
             return;

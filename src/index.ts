@@ -20,7 +20,7 @@ import { AlgoliaConfig, options } from "./config";
         indexName: process.env.ALGOLIA_INDEX_NAME || "",
     },
 }))
-export default class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
+export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     readonly name = "index";
 
     readonly command = new Command(this.name)
@@ -91,6 +91,16 @@ export default class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
                 error,
             );
             throw error;
+        }
+    }
+}
+
+
+export default class Extension {
+    apply(program: BaseProgram) {
+        if (BaseProgram.is(program) && program.name === "Program") {
+            console.log("Adding AlgoliaProgram to Program");
+            program.addModule(new AlgoliaProgram());
         }
     }
 }
