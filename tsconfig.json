@@ -1,19 +1,15 @@
 {
-  "extends": "@diplodoc/tsconfig/tsconfig.json",
+  "extends": "@diplodoc/tsconfig",
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "Node16",
+    "target": "ES2018",
+    "module": "NodeNext",
     "declaration": true,
     "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "node16",
+    "moduleResolution": "nodenext",
     "baseUrl": ".",
     "sourceMap": true,
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
