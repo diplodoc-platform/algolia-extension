@@ -38,18 +38,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
     apply(program?: BaseProgram) {
         super.apply(program);
-
-        getBuildHooks(program)
-            .BeforeRun.for("html")
-            .tap("AlgoliaJsonSearch", (run) => {
-                getSearchHooks(run.search)
-                    .Provider.for("algolia")
-                    .tap("AlgoliaJsonSearch", (_connector, config) => {
-                        return new AlgoliaProvider(run, {
-                            ...config,
-                        });
-                    });
-            });
     }
 
     async action(args: BaseArgs) {
@@ -102,5 +90,17 @@ export default class Extension {
             console.log("Adding AlgoliaProgram to Program");
             program.addModule(new AlgoliaProgram());
         }
+
+        getBuildHooks(program)
+            .BeforeRun.for("html")
+            .tap("AlgoliaJsonSearch", (run) => {
+                getSearchHooks(run.search)
+                    .Provider.for("algolia")
+                    .tap("AlgoliaJsonSearch", (_connector, config) => {
+                        return new AlgoliaProvider(run, {
+                            ...config,
+                        });
+                    });
+            });
     }
 }
