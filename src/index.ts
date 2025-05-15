@@ -98,6 +98,8 @@ export default class Extension {
                         const indexName = get(config,"search.indexName", '') || (projectName + '-{lang}')
 
                         return new AlgoliaProvider(run, {
+                            appId: process.env.ALGOLIA_APP_ID,
+                            apiKey: process.env.ALGOLIA_API_KEY,
                             ...config,
                             indexName
                         });
