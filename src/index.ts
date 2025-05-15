@@ -32,14 +32,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
     protected readonly modules = [];
 
-    async init(args: BaseArgs, parent?: BaseProgram) {
-        await super.init(args, parent);
-    }
-
-    apply(program?: BaseProgram) {
-        super.apply(program);
-    }
-
     async action(args: BaseArgs) {
         const { input } = args;
         const { appId, apiKey } = this.config.search;
@@ -49,11 +41,12 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
         }
 
         // inxexName used as a project name or if project name is not set, use indexName
-        const indexName = get(
+        const projectName = get(
             this.config,
-            "docs-viewer.project-name",
-            this.config.search.indexName || "",
+            "docs-viewer.project-name","",
         );
+
+        const indexName = get(this.config,"search.indexName", '') || (projectName + '-{lang}')
 
         if (!appId || !apiKey || !indexName) {
             throw new Error(
@@ -61,12 +54,12 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             );
         }
 
-        this.logger.info("Starting Algolia indexing...");
-        const provider = new AlgoliaProvider(new BuildRun(input), {
+        this.logger.info("Starting Algolia indexing...", projectName, this.config);
+        const provider = new AlgoliaProvider(new BuildRun({...this.config, output: this.config.input}), {
             appId,
             apiKey,
             searchKey: "search-api-key",
-            indexPrefix: indexName,
+            indexName,
             index: true,
             uploadDuringBuild: true,
         });
@@ -97,8 +90,16 @@ export default class Extension {
                 getSearchHooks(run.search)
                     .Provider.for("algolia")
                     .tap("AlgoliaJsonSearch", (_connector, config) => {
+                        const projectName = get(
+                            config,
+                            "docs-viewer.project-name","",
+                        );
+                
+                        const indexName = get(config,"search.indexName", '') || (projectName + '-{lang}')
+
                         return new AlgoliaProvider(run, {
                             ...config,
+                            indexName
                         });
                     });
             });
