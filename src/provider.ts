@@ -15,7 +15,7 @@ export type ProviderConfig = {
     appId: string;
     apiKey?: string;
     searchKey: string;
-    indexPrefix: string;
+    indexName: string;
     indexSettings?: Partial<IndexSettings>;
     index?: boolean;
     uploadDuringBuild?: boolean;
@@ -54,7 +54,7 @@ export class AlgoliaProvider {
         this.index = config.index !== false;
         this.uploadDuringBuild = config.uploadDuringBuild !== false;
         this.appId = config.appId;
-        this.indexPrefix = config.indexPrefix;
+        this.indexPrefix = config.indexName.replace('-{lang}', '');
         this.apiKey = config.apiKey;
         this.searchKey = config.searchKey;
         this.indexSettings = config.indexSettings || {};
@@ -128,7 +128,13 @@ export class AlgoliaProvider {
                 url: path.replace(/\.\w+$/, "") + ".html",
                 lang,
             };
-            this.objects[lang].push(record);
+
+            // Check if record needs to be split
+            if (this.getRecordSize(record) >= 10000) {
+                this.splitAndAddLargeRecord(record, lang);
+            } else {
+                this.objects[lang].push(record);
+            }
             return;
         }
 
@@ -144,9 +150,16 @@ export class AlgoliaProvider {
                 lang,
                 section: section.heading || undefined,
             };
-            this.objects[lang].push(record);
+
+            // Check if record needs to be split
+            if (this.getRecordSize(record) >= 9600) {
+                this.splitAndAddLargeRecord(record, lang);
+            } else {
+                this.objects[lang].push(record);
+            }
         });
     }
+
 
     async addObjects(): Promise<void> {
         if (!this.index || !this.uploadDuringBuild) {
@@ -156,7 +169,7 @@ export class AlgoliaProvider {
         const client = this.ensureClient();
 
         // Find all language files in _search directory
-        const searchDir = join(this.run.input, "_search");
+        const searchDir = join(this.run.originalInput, "_search");
         const files = await this.run.glob("*-algolia.json", { cwd: searchDir });
 
         for (const file of files) {
@@ -302,6 +315,33 @@ export class AlgoliaProvider {
         };
     }
 
+    /**
+     * Splits a large record into smaller chunks and adds them to the objects array
+     * @param record The record to split
+     * @param lang The language of the record
+     * @returns void
+     */
+    private splitAndAddLargeRecord(record: IndexRecord, lang: string): void {
+        const baseObjectID = record.objectID;
+        const content = record.content;
+        const chunkSize = 4000; // Approximate chunk size in characters
+        const chunks = Math.ceil(content.length / chunkSize);
+
+        for (let i = 0; i < chunks; i++) {
+            const start = i * chunkSize;
+            const end = Math.min(start + chunkSize, content.length);
+            const chunkContent = content.slice(start, end);
+
+            const chunkRecord: IndexRecord = {
+                ...record,
+                objectID: `${baseObjectID}-chunk-${i + 1}`,
+                content: chunkContent,
+            };
+
+            this.objects[lang].push(chunkRecord);
+        }
+    }
+
     private ensureClient(): Algoliasearch {
         if (!this.client) {
             throw new Error(
@@ -332,6 +372,23 @@ export class AlgoliaProvider {
         });
 
         return headings;
+    }
+
+    /**
+     * Calculates the size of a record according to Algolia's specifications.
+     * The size is determined by:
+     * 1. Converting the record to a JSON string
+     * 2. Removing extra spaces (spaces outside of key/value strings)
+     * 3. Measuring the size of the resulting string
+     * 
+     * @param record The record to measure
+     * @returns The size of the record in bytes
+     */
+    private getRecordSize(record: IndexRecord): number {
+        // Convert to JSON string with minimal whitespace
+        const jsonString = JSON.stringify(record);
+        // Get the size in bytes (UTF-8 encoding)
+        return Buffer.from(jsonString).length;
     }
 }
 
