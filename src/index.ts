@@ -32,8 +32,8 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
     protected readonly modules = [];
 
-    async init(args: BaseArgs, parent?: BaseProgram, isExtension = true) {
-        await super.init(args, parent, isExtension);
+    async init(args: BaseArgs, parent?: BaseProgram) {
+        await super.init(args, parent);
     }
 
     apply(program?: BaseProgram) {
