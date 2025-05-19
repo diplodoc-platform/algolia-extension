@@ -163,6 +163,17 @@ export class AlgoliaProvider {
             return;
         }
 
+        // const tocPath = this.run.toc.for(path);
+        // const toc = await this.run.toc.dump(tocPath);
+        // const items = []
+        // await this.run.toc.walkItems(toc.items, (item: {path?: string}) => {
+        //     // Not working, should return correct breadcrumbs
+        //     // if (item.path && (path === item.path  || basename(path) === basename(item.path) || basename(path).startsWith(basename(item.path)))) {
+        //     //     items.push(item);
+        //     // }
+        //     return true
+        // })
+
         // Create records for each section
         sections.forEach((section, index) => {
             const record: IndexRecord = {
@@ -175,6 +186,8 @@ export class AlgoliaProvider {
                 url: path.replace(/\.\w+$/, "") + ".html",
                 lang,
                 section: section.heading || undefined,
+                // @ts-ignore
+                lang2: items.length
             };
 
             // Check if record needs to be split
