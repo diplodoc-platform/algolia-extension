@@ -27,6 +27,7 @@ export type IndexRecord = {
     content: string;
     headings: string[];
     keywords: string[];
+    anchor?: string;
     url: string;
     lang: string;
     section?: string;
@@ -48,6 +49,11 @@ export class AlgoliaProvider {
     private client?: Algoliasearch;
     private run: BuildRun;
     private logger = new IndexLogger();
+
+    private defaultSettings: IndexSettings = {
+        distinct: 1,
+        attributeForDistinct: 'url',
+    }
 
     constructor(run: BuildRun, config: ProviderConfig) {
         this.run = run;
@@ -85,9 +91,10 @@ export class AlgoliaProvider {
         }
 
         const $ = load(info.html);
-        const sections: { heading: string; content: string }[] = [];
-        let currentSection = { heading: "", content: "" };
+        const sections: { heading: string; content: string; anchor?: string }[] = [];
+        let currentSection = { heading: "", content: "", anchor: ""};
 
+        let mainHeading = ''
         // Process all elements to split into sections
         $("body")
             .children()
@@ -100,8 +107,25 @@ export class AlgoliaProvider {
                     if (currentSection.content.trim()) {
                         sections.push({ ...currentSection });
                     }
+
+                    let headingText = ''
+                    for (const el of $el.contents()) {
+                        if (el.type === 'text') {
+                            headingText = String(el.data)
+                        } 
+                    }
+
+                    if (!headingText) {
+                        headingText = $el.text().trim()
+                    }
+
+                    if (!mainHeading) {
+                        mainHeading = headingText
+                    }
+
                     currentSection = {
-                        heading: $el.text().trim(),
+                        heading: headingText,
+                        anchor: $el.attr('id') || '',
                         content: "",
                     };
                 } else {
@@ -121,9 +145,10 @@ export class AlgoliaProvider {
         if (sections.length === 0) {
             const record: IndexRecord = {
                 objectID: path.replace(/\.\w+$/, ""),
-                title: title || meta.title || "",
+                title: title || meta.title  || mainHeading || "",
                 content: html2text(info.html).slice(0, 5000),
                 headings: this.extractHeadings(info.html),
+                anchor: '',
                 keywords: meta.keywords || [],
                 url: path.replace(/\.\w+$/, "") + ".html",
                 lang,
@@ -142,9 +167,10 @@ export class AlgoliaProvider {
         sections.forEach((section, index) => {
             const record: IndexRecord = {
                 objectID: `${path.replace(/\.\w+$/, "")}-${index}`,
-                title: title || meta.title || "",
+                title: title || meta.title || mainHeading || "",
                 content: section.content.trim(),
                 headings: [section.heading],
+                anchor: section.anchor,
                 keywords: meta.keywords || [],
                 url: path.replace(/\.\w+$/, "") + ".html",
                 lang,
@@ -197,6 +223,7 @@ export class AlgoliaProvider {
             await client.setSettings({
                 indexName,
                 indexSettings: {
+                    ...this.defaultSettings,
                     ...this.indexSettings,
                     indexLanguages: uniq([
                         lang,
@@ -242,6 +269,7 @@ export class AlgoliaProvider {
             await client.setSettings({
                 indexName,
                 indexSettings: {
+                    ...this.defaultSettings,
                     ...settings,
                     indexLanguages: uniq([
                         lang,
@@ -282,6 +310,7 @@ export class AlgoliaProvider {
             await this.client.setSettings({
                 indexName,
                 indexSettings: {
+                    ...this.defaultSettings,
                     ...this.indexSettings,
                     indexLanguages: uniq([
                         lang,
