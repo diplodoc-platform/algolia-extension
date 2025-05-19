@@ -156,7 +156,7 @@ export class AlgoliaProvider {
 
             // Check if record needs to be split
             if (this.getRecordSize(record) >= 10000) {
-                this.splitAndAddLargeRecord(record, lang);
+                this.splitAndAddLargeRecord(record, this.objects[lang]);
             } else {
                 this.objects[lang].push(record);
             }
@@ -179,7 +179,7 @@ export class AlgoliaProvider {
 
             // Check if record needs to be split
             if (this.getRecordSize(record) >= 9600) {
-                this.splitAndAddLargeRecord(record, lang);
+                this.splitAndAddLargeRecord(record, this.objects[lang]);
             } else {
                 this.objects[lang].push(record);
             }
@@ -347,10 +347,10 @@ export class AlgoliaProvider {
     /**
      * Splits a large record into smaller chunks and adds them to the objects array
      * @param record The record to split
-     * @param lang The language of the record
+     * @param acc The accumulator for records
      * @returns void
      */
-    private splitAndAddLargeRecord(record: IndexRecord, lang: string): void {
+    private splitAndAddLargeRecord(record: IndexRecord, acc: IndexRecord[]): void {
         const baseObjectID = record.objectID;
         const content = record.content;
         const chunkSize = 4000; // Approximate chunk size in characters
@@ -367,7 +367,7 @@ export class AlgoliaProvider {
                 content: chunkContent,
             };
 
-            this.objects[lang].push(chunkRecord);
+            acc.push(chunkRecord);
         }
     }
 
