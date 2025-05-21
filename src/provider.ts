@@ -53,6 +53,7 @@ export class AlgoliaProvider {
     private defaultSettings: IndexSettings = {
         distinct: 1,
         attributeForDistinct: 'url',
+        attributesToSnippet: ['content']
     }
 
     constructor(run: BuildRun, config: ProviderConfig) {
@@ -186,8 +187,6 @@ export class AlgoliaProvider {
                 url: path.replace(/\.\w+$/, "") + ".html",
                 lang,
                 section: section.heading || undefined,
-                // @ts-ignore
-                lang2: items.length
             };
 
             // Check if record needs to be split
