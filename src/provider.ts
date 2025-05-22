@@ -53,6 +53,7 @@ export class AlgoliaProvider {
     private defaultSettings: IndexSettings = {
         distinct: 1,
         attributeForDistinct: 'url',
+        attributesToSnippet: ['content:20']
     }
 
     constructor(run: BuildRun, config: ProviderConfig) {
@@ -162,6 +163,17 @@ export class AlgoliaProvider {
             }
             return;
         }
+
+        // const tocPath = this.run.toc.for(path);
+        // const toc = await this.run.toc.dump(tocPath);
+        // const items = []
+        // await this.run.toc.walkItems(toc.items, (item: {path?: string}) => {
+        //     // Not working, should return correct breadcrumbs
+        //     // if (item.path && (path === item.path  || basename(path) === basename(item.path) || basename(path).startsWith(basename(item.path)))) {
+        //     //     items.push(item);
+        //     // }
+        //     return true
+        // })
 
         // Create records for each section
         sections.forEach((section, index) => {
