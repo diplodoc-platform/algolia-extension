@@ -53,7 +53,7 @@ export class AlgoliaProvider {
     private defaultSettings: IndexSettings = {
         distinct: 1,
         attributeForDistinct: 'url',
-        attributesToSnippet: ['content']
+        attributesToSnippet: ['content:20']
     }
 
     constructor(run: BuildRun, config: ProviderConfig) {
