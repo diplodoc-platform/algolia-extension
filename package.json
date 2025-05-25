@@ -5,7 +5,11 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "node esbuild.config.js",
+    "build:ts": "tsc",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:all": "npm run build && npm run build:types",
+    "dev": "NODE_ENV=development node esbuild.config.js",
     "lint": "eslint src --ext .ts",
     "test": "echo 'tests is empty'",
     "format": "prettier --write \"src/**/*.ts\""
@@ -22,6 +26,8 @@
     "@diplodoc/tsconfig": "^1.0.2",
     "@types/lodash": "^4.14.202",
     "@types/node": "^18.0.0",
+    "esbuild": "^0.19.5",
+    "esbuild-node-externals": "^1.8.0",
     "eslint": "^8.0.0",
     "prettier": "^3.0.0",
     "typescript": "^5.0.0"
