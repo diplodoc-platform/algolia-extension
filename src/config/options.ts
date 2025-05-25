@@ -1,15 +1,4 @@
 import { option } from "@diplodoc/cli/lib/config";
-import { BaseConfig } from "@diplodoc/cli/lib/program";
-
-export interface AlgoliaConfig extends BaseConfig {
-    input: string;
-    search: {
-        provider: "algolia";
-        appId: string;
-        apiKey: string;
-        indexName: string;
-    };
-}
 
 export const options = {
     input: option({

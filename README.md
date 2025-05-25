@@ -7,25 +7,41 @@ This extension provides Algolia search integration for Diplodoc documentation. I
 ```
 extensions/algolia/
 ├── src/
-│   ├── index.ts        # Main extension entry point and CLI program
-│   ├── provider.ts     # Algolia provider implementation
-│   ├── config.ts       # Configuration types and defaults
-│   ├── types.ts        # TypeScript type definitions
-│   └── hooks.ts        # Extension hooks and integration points
-├── dist/              # Compiled JavaScript output
-└── package.json       # Package configuration and dependencies
+│   ├── index.ts                # Main extension entry point and CLI program
+│   ├── config/                 # Configuration
+│   │   ├── index.ts            # Configuration exports
+│   │   └── options.ts          # Command line options
+│   ├── core/                   # Core functionality
+│   │   ├── index.ts            # Core exports
+│   │   ├── provider.ts         # Algolia provider implementation
+│   │   └── document-processor.ts # Document processing utilities
+│   ├── workers/                # Parallel processing
+│   │   ├── index.ts            # Workers exports
+│   │   ├── pool.ts             # Worker pool for parallel processing
+│   │   └── processor.ts        # Worker thread implementation
+│   ├── client/                 # Client-side code
+│   │   ├── index.ts            # Client exports
+│   │   └── search.js           # Client-side search implementation
+│   └── types/                  # Type definitions
+│       └── index.ts            # TypeScript type definitions
+├── dist/                      # Compiled JavaScript output
+└── package.json               # Package configuration and dependencies
 ```
 
 ## Core Components
 
-### `index.ts`
+### Main Components
+
+#### `index.ts`
 Main entry point of the extension that implements the CLI program. Key features:
 - Defines the `AlgoliaProgram` class that extends `BaseProgram`
 - Handles command-line arguments and configuration
 - Integrates with Diplodoc's build and search hooks
 - Manages the indexing process during documentation builds
 
-### `provider.ts`
+### Core Module
+
+#### `core/provider.ts`
 Implements the core Algolia functionality:
 - `AlgoliaProvider` class for managing Algolia indices
 - Methods for adding and processing documentation content
@@ -40,23 +56,51 @@ Key methods:
 - `setSettings(settings)`: Updates index configuration
 - `release()`: Finalizes the indexing process
 
-### `config.ts`
-Contains configuration types and defaults:
-- Defines the `AlgoliaConfig` interface
-- Provides default configuration values
-- Handles environment variable integration
+#### `core/document-processor.ts`
+Contains utilities for processing HTML documents:
+- `processDocument()`: Converts HTML to Algolia records
+- `splitDocumentIntoSections()`: Divides documents into searchable sections
+- `extractHeadings()`: Extracts headings from HTML content
+- `splitAndAddLargeRecord()`: Handles large content by splitting into chunks
 
-### `types.ts`
+### Workers Module
+
+#### `workers/pool.ts`
+Implements worker pool for parallel processing:
+- `AlgoliaWorkerPool`: Manages a pool of worker threads
+- Distributes document processing tasks across multiple CPU cores
+- Handles worker lifecycle and error recovery
+- Collects and aggregates results from workers
+
+#### `workers/processor.ts`
+Worker thread implementation:
+- Processes HTML documents in separate threads
+- Communicates with the main thread via messages
+- Handles errors and returns results
+
+### Configuration Module
+
+#### `config/options.ts`
+Contains configuration options:
+- Defines command-line options for the extension
+- Provides environment variable integration
+
+### Types Module
+
+#### `types/index.ts`
 TypeScript type definitions:
-- `IndexRecord`: Structure for indexed documentation content
-- `ProviderConfig`: Configuration for the Algolia provider
-- Other shared types and interfaces
+- `AlgoliaRecord`: Structure for indexed documentation content
+- `AlgoliaProviderConfig`: Configuration for the Algolia provider
+- `DocumentProcessingContext`: Context for document processing
+- Message types for worker communication
 
-### `hooks.ts`
-Extension hooks for Diplodoc integration:
-- Defines integration points with Diplodoc's build system
-- Manages search provider registration
-- Handles build-time indexing
+### Client Module
+
+#### `client/search.js`
+Client-side search implementation:
+- Web worker for browser-based search
+- Communicates with Algolia API
+- Formats search results for display
 
 ## Usage
 
