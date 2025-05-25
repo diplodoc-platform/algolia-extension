@@ -1,4 +1,5 @@
-import { BaseConfig, option } from "@diplodoc/cli";
+import { option } from "@diplodoc/cli/lib/config";
+import { BaseConfig } from "@diplodoc/cli/lib/program";
 
 export interface AlgoliaConfig extends BaseConfig {
     input: string;

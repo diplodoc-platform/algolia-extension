@@ -8,7 +8,9 @@ import { algoliasearch } from "algoliasearch";
 import { uniq } from "lodash";
 import { html2text } from "@diplodoc/search-extension/indexer";
 import { load } from "cheerio";
-import { BuildRun, LogLevel, Logger } from "@diplodoc/cli";
+import { BuildRun} from "@diplodoc/cli";
+import { LogLevel, Logger } from "@diplodoc/cli/lib/logger";
+
 import { join } from "path";
 
 export type ProviderConfig = {

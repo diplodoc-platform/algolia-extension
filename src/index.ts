@@ -1,13 +1,10 @@
-import {
-    BaseArgs,
-    BaseProgram,
-    BuildRun,
-    Command,
-    ExtendedOption,
-    getBuildHooks,
-    getSearchHooks,
-    withConfigDefaults,
-} from "@diplodoc/cli";
+//@ts-nocheck
+import { BaseArgs } from '@diplodoc/cli';
+import { BaseProgram } from '@diplodoc/cli/lib/program';
+import { BuildRun } from '@diplodoc/cli';
+import { Command, ExtendedOption } from '@diplodoc/cli/lib/config';
+import { getBuildHooks, getSearchHooks } from '@diplodoc/cli';
+import { withConfigDefaults } from '@diplodoc/cli/lib/program';
 import { get } from "lodash";
 
 import { AlgoliaProvider } from "./provider";
@@ -54,7 +51,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             );
         }
 
-        this.logger.info("Starting Algolia indexing...", projectName, this.config);
+        this.logger.info("Starting Algolia indexing...", projectName, JSON.stringify(this.config));
         const provider = new AlgoliaProvider(new BuildRun({...this.config, output: this.config.input}), {
             appId,
             apiKey,
