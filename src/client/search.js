@@ -71,7 +71,7 @@ self.api = {
 
 // Search function
 async function search(config, query) {
-    const { appId, searchKey, indexName, querySettings, mark } = config;
+    const {appId, searchKey, indexName, querySettings, mark} = config;
 
     const response = await fetch(`https://${appId}.algolia.net/1/indexes/${indexName}/query`, {
         method: 'POST',
@@ -93,19 +93,21 @@ async function search(config, query) {
 
 // Format search results
 function format(config, result) {
-    const { base } = config;
+    const {base} = config;
 
-    return result.hits.map(({ url, title, section, anchor, _highlightResult, _snippetResult }) => {
-        const link = anchor 
+    return result.hits.map(({url, title, section, anchor, _highlightResult, _snippetResult}) => {
+        const link = anchor
             ? `${base.replace(/\/?$/, '')}/${url}#${anchor}`
             : `${base.replace(/\/?$/, '')}/${url}`;
-            
+
         return {
             type: 'page',
             link,
             title: _highlightResult?.title?.value || title,
             section: section,
-            description: _snippetResult?.content?.value || trim(_highlightResult?.content?.value, TRIM_WORDS),
+            description:
+                _snippetResult?.content?.value ||
+                trim(_highlightResult?.content?.value, TRIM_WORDS),
         };
     });
 }
@@ -113,7 +115,7 @@ function format(config, result) {
 // Trim text to a specific number of words
 function trim(text, words) {
     if (!text) return '';
-    
+
     const parts = text.split(/\s/);
 
     if (parts.length > words) {

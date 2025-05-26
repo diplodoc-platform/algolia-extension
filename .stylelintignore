@@ -1,13 +1,9 @@
-node_modules
-build
-dist
-coverage 
-
-.vscode
 .idea
+.vscode
 .history
 .env
 .DS_Store
+node_modules
 /lib
 /dist
 /build
