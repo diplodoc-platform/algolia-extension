@@ -57,7 +57,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             throw new Error('Input path is required');
         }
 
-        const indexName = get(this.config, 'search.indexName', 'docs-{lang}');
+        const indexName = get(this.config, 'search.indexName', 'docs');
 
         if (!appId || !apiKey || !indexName) {
             throw new Error(
@@ -129,7 +129,7 @@ export class Extension implements IExtension {
     }
 
     private createAlgoliaProvider(run: BuildRun, config: SearchConfig): AlgoliaProvider {
-        const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs-{lang}');
+        const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs');
 
         return new AlgoliaProvider(run, {
             appId: process.env.ALGOLIA_APP_ID || get(config, 'appId', ''),

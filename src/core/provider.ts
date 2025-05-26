@@ -49,12 +49,10 @@ export class AlgoliaProvider implements SearchProvider {
         this.appId = config.appId;
 
         if (!config.indexName) {
-            this.logger.warn(
-                'Index name (indexName) is not specified. Using default value "docs-{lang}"',
-            );
+            this.logger.warn('Index name (indexName) is not specified. Using default value "docs"');
         }
 
-        this.indexName = config.indexName || 'docs-{lang}';
+        this.indexName = config.indexName || 'docs';
 
         this.logger.info(`Using index name: ${this.indexName}`);
 
