@@ -36,7 +36,7 @@ export class AlgoliaWorkerPool {
             const devPath = join(__dirname, 'processor.js');
             require.resolve(devPath);
             this.workerPath = devPath;
-        } catch (e) {
+        } catch {
             // If failed, use absolute path for production
             this.workerPath = join(process.cwd(), 'dist', 'workers', 'processor.js');
             this.logger.info(`Using worker path: ${this.workerPath}`);
