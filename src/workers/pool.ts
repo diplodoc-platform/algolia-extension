@@ -27,11 +27,15 @@ export class AlgoliaWorkerPool {
 
     constructor(maxWorkers = 4) {
         this.maxWorkers = Math.max(1, Math.min(maxWorkers, require('os').cpus().length - 1));
-
-        this.workerPath = join(process.cwd(), 'dist', 'src', 'workers', 'processor.js');
+        this.workerPath = join(__dirname, 'processor.js');
     }
 
     initialize(): void {
+        const fs = require('fs');
+        if (!fs.existsSync(this.workerPath)) {
+            throw new Error(`Worker file not found: ${this.workerPath}`);
+        }
+
         for (let i = 0; i < this.maxWorkers; i++) {
             const worker = this.createWorker();
             this.workers.push(worker);
@@ -68,8 +72,27 @@ export class AlgoliaWorkerPool {
     }
 
     async terminate(): Promise<void> {
-        await Promise.all(this.workers.map((worker) => worker.terminate()));
-        this.workers = [];
+        try {
+            // Отправляем сигнал о завершении работы всем воркерам
+            this.workers.forEach((worker) => {
+                try {
+                    worker.postMessage({type: 'terminate', data: null});
+                } catch (error) {
+                    this.logger.warn(`Error sending terminate message to worker:`, error);
+                }
+            });
+
+            // Даем воркерам время на корректное завершение
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
+            // Завершаем работу воркеров
+            await Promise.all(this.workers.map((worker) => worker.terminate()));
+
+            this.workers = [];
+        } catch (error) {
+            this.logger.error(`Error during worker pool termination:`, error);
+            this.workers = [];
+        }
     }
 
     private createWorker(): NodeWorker {
@@ -118,7 +141,6 @@ export class AlgoliaWorkerPool {
             case 'error': {
                 const errorMessage = message as ErrorMessage;
                 this.logger.error(`Processing error:`, errorMessage.data.message);
-
                 this.processNextItem(worker);
                 break;
             }
@@ -147,7 +169,13 @@ export class AlgoliaWorkerPool {
         if (this.queue.length > 0) {
             const task = this.queue.shift();
             if (task) {
-                worker.postMessage(task);
+                try {
+                    worker.postMessage(task);
+                } catch (error) {
+                    this.logger.error(`Error sending task to worker:`, error);
+                    this.queue.unshift(task);
+                    this.replaceWorker(worker);
+                }
             }
         }
     }
