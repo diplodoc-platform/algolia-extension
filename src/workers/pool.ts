@@ -1,5 +1,6 @@
 import { Worker } from 'worker_threads';
 import { join } from 'path';
+import { LogLevel, Logger } from "@diplodoc/cli/lib/logger";
 import {
     AlgoliaRecord,
     WorkerMessage,
@@ -8,14 +9,19 @@ import {
     ErrorMessage
 } from '../types';
 
+class WorkerPoolLogger extends Logger {
+    worker = this.topic(LogLevel.INFO, "WORKER_POOL");
+}
+
 export class AlgoliaWorkerPool {
     private workers: Worker[] = [];
     private queue: ProcessMessage[] = [];
     private processing = false;
-    private maxWorkers: number;
-    private workerPath: string;
+    private readonly maxWorkers: number;
+    private readonly workerPath: string;
     private results: Map<string, AlgoliaRecord[]> = new Map();
     private resolvePromise: ((value: Map<string, AlgoliaRecord[]>) => void) | null = null;
+    private logger = new WorkerPoolLogger();
 
     constructor(maxWorkers = 4) {
         this.maxWorkers = Math.max(1, Math.min(maxWorkers, require('os').cpus().length - 1));
@@ -31,7 +37,7 @@ export class AlgoliaWorkerPool {
         } catch (e) {
             // If failed, use absolute path for production
             this.workerPath = join(process.cwd(), 'dist', 'workers', 'processor.js');
-            console.log(`Using worker path: ${this.workerPath}`);
+            this.logger.info(`Using worker path: ${this.workerPath}`);
         }
     }
 
@@ -43,13 +49,13 @@ export class AlgoliaWorkerPool {
         });
         
         worker.on('error', (error) => {
-            console.error(`Worker error:`, error);
+            this.logger.error(`Worker error:`, error);
             this.replaceWorker(worker);
         });
         
         worker.on('exit', (code) => {
             if (code !== 0) {
-                console.error(`Worker exited with code ${code}`);
+                this.logger.error(`Worker exited with code ${code}`);
                 this.replaceWorker(worker);
             }
         });
@@ -83,13 +89,13 @@ export class AlgoliaWorkerPool {
                 
             case 'error':
                 const errorMessage = message as ErrorMessage;
-                console.error(`Processing error:`, errorMessage.data.message);
+                this.logger.error(`Processing error:`, errorMessage.data.message);
                 
                 this.processNextItem(worker);
                 break;
                 
             default:
-                console.warn(`Unknown message type: ${message.type}`);
+                this.logger.warn(`Unknown message type: ${message.type}`);
                 this.processNextItem(worker);
         }
         
@@ -108,7 +114,7 @@ export class AlgoliaWorkerPool {
         }
     }
 
-    addTask(path: string, lang: string, html: string, title: string, meta: any): void {
+    addTask(path: string, lang: string, html: string, title: string, meta: Record<string, any>): void {
         const message: ProcessMessage = {
             type: 'process',
             data: {
@@ -154,9 +160,6 @@ export class AlgoliaWorkerPool {
         }
     }
 
-    /**
-     * Waits for completion of all tasks
-     */
     async waitForCompletion(): Promise<Map<string, AlgoliaRecord[]>> {
         if (this.queue.length === 0 && !this.processing) {
             return this.results;
@@ -167,9 +170,6 @@ export class AlgoliaWorkerPool {
         });
     }
 
-    /**
-     * Terminates all workers
-     */
     async terminate(): Promise<void> {
         await Promise.all(this.workers.map(worker => worker.terminate()));
         this.workers = [];
