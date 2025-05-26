@@ -159,8 +159,6 @@ describe('AlgoliaProvider', () => {
     });
   });
 
-  // Удалены тесты, которые проверяют только моки
-
   describe('config', () => {
     it('should return correct search configuration for client', () => {
       const result = provider.config('en');
@@ -191,6 +189,4 @@ describe('AlgoliaProvider', () => {
       });
     });
   });
-
-  // Удалены тесты, которые проверяют только моки
 });

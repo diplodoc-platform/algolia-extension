@@ -153,12 +153,10 @@ export class AlgoliaProvider implements SearchProvider {
             return;
         }
 
-        // Find all language files in _search directory
         const searchDir = join(this.run.originalInput, "_search");
         const files = await this.run.glob("*-algolia.json", { cwd: searchDir });
 
         for (const file of files) {
-            // Extract language from filename (e.g. en-algolia.json -> en)
             const langMatch = file.match(/^([a-z]{2})-algolia\.json$/);
             if (!langMatch) {
                 continue;
@@ -167,13 +165,11 @@ export class AlgoliaProvider implements SearchProvider {
             const lang = langMatch[1];
             const filePath = join(searchDir, file);
 
-            // Read the file content
             const content = await this.run.read(filePath);
             const records = JSON.parse(content) as AlgoliaRecord[];
 
             const indexName = createIndexName(this.indexPrefix, lang);
             
-            // Upload records to Algolia
             await this.uploadRecordsToAlgolia(indexName, lang, records, 'replaceAllObjects');
         }
     }
@@ -212,22 +208,18 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
     async release(): Promise<void> {
-        // If worker pool is used, wait for all tasks to complete
         if (this.workerPool) {
             const results = await this.workerPool.waitForCompletion();
             
-            // Merge results from workers with the main object
             for (const [lang, records] of results.entries()) {
                 this.objects[lang] = this.objects[lang] || [];
                 this.objects[lang].push(...records);
             }
             
-            // Terminate worker pool
             await this.workerPool.terminate();
         }
         
         for (const lang of Object.keys(this.objects)) {
-            // Copy API file for Algolia search
             if (this.apiLink) {
                 await this.run.copy(
                     join(__dirname, '../client/search.js'),
@@ -238,7 +230,6 @@ export class AlgoliaProvider implements SearchProvider {
             const page = await this.run.search.page(lang);
             await this.run.write(join(this.run.output, pageLink(lang)), page);
 
-            // Write JSON file for each language
             const jsonPath = join(
                 this.run.output,
                 "_search",
@@ -255,7 +246,6 @@ export class AlgoliaProvider implements SearchProvider {
 
             const indexName = createIndexName(this.indexPrefix, lang);
             
-            // Upload records to Algolia
             await this.uploadRecordsToAlgolia(indexName, lang, this.objects[lang], 'saveObjects');
         }
     }
