@@ -25,7 +25,6 @@ import {
 
 export class AlgoliaProvider implements SearchProvider {
     private index: boolean;
-    private uploadDuringBuild: boolean;
     private appId: string;
     private apiKey?: string;
     private searchKey: string;
@@ -41,8 +40,7 @@ export class AlgoliaProvider implements SearchProvider {
 
     constructor(run: BuildRun, config: AlgoliaProviderConfig) {
         this.run = run;
-        this.index = config.index !== false;
-        this.uploadDuringBuild = config.uploadDuringBuild !== false;
+        this.index = config.index === undefined ? false : Boolean(config.index);
 
         if (!config.appId) {
             this.logger.error('Algolia appId is not specified');
@@ -110,7 +108,7 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
     async addObjects(): Promise<void> {
-        if (!this.index || !this.uploadDuringBuild) {
+        if (!this.index) {
             return;
         }
 
@@ -136,7 +134,7 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
     async clearIndex(): Promise<void> {
-        if (!this.index || !this.uploadDuringBuild) {
+        if (!this.index) {
             return;
         }
 
@@ -148,7 +146,7 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
     async setSettings(settings: Partial<IndexSettings>): Promise<void> {
-        if (!this.index || !this.uploadDuringBuild) {
+        if (!this.index) {
             return;
         }
 
@@ -194,12 +192,15 @@ export class AlgoliaProvider implements SearchProvider {
             const jsonPath = join(this.run.output, '_search', `${lang}-algolia.json`);
             await this.run.write(jsonPath, JSON.stringify(this.objects[lang], null, 2));
 
-            if (!this.index || !this.uploadDuringBuild || !this.client) {
+            this.logger.info(
+                `Created local search index: ${lang} - ${this.objects[lang].length} records`,
+            );
+
+            if (!this.index || !this.client) {
                 continue;
             }
 
             const indexName = createIndexName(this.indexPrefix, lang);
-
             await this.uploadRecordsToAlgolia(indexName, lang, this.objects[lang], 'saveObjects');
         }
     }

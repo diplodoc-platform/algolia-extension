@@ -1,3 +1,5 @@
+import type {BuildRun} from '@diplodoc/cli';
+
 import {join} from 'path';
 import {algoliasearch} from 'algoliasearch';
 
@@ -33,19 +35,29 @@ jest.mock('../src/core/utils', () => {
     };
 });
 
+interface MockLogger {
+    info: jest.Mock;
+    warn: jest.Mock;
+    error: jest.Mock;
+}
+
+interface MockSearch {
+    page: jest.Mock;
+}
+
 class MockBuildRun {
     originalInput: string;
     output: string;
-    logger: any;
-    search: any;
+    logger: MockLogger;
+    search: MockSearch;
     glob: jest.Mock;
     read: jest.Mock;
     write: jest.Mock;
     copy: jest.Mock;
 
-    constructor(config: any = {}) {
-        this.originalInput = config.input || '/test/input';
-        this.output = config.output || '/test/output';
+    constructor(config: Record<string, unknown> = {}) {
+        this.originalInput = (config.input as string) || '/test/input';
+        this.output = (config.output as string) || '/test/output';
         this.logger = {
             info: jest.fn(),
             warn: jest.fn(),
@@ -86,10 +98,9 @@ describe('AlgoliaProvider', () => {
             indexName: 'test-index-{lang}',
             indexPrefix: 'test-index',
             index: true,
-            uploadDuringBuild: true,
         };
 
-        provider = new AlgoliaProvider(mockRun as any, config);
+        provider = new AlgoliaProvider(mockRun as unknown as BuildRun, config);
     });
 
     describe('constructor', () => {
@@ -105,7 +116,10 @@ describe('AlgoliaProvider', () => {
                 searchKey: 'test-search-key',
             };
 
-            const newProvider = new AlgoliaProvider(mockRun as any, configWithoutPrefix);
+            const newProvider = new AlgoliaProvider(
+                mockRun as unknown as BuildRun,
+                configWithoutPrefix,
+            );
             const result = newProvider.config('en');
 
             expect(result.indexName).toBe('docs-en');
@@ -140,7 +154,10 @@ describe('AlgoliaProvider', () => {
 
         it('should not process anything when index is false', async () => {
             const noIndexConfig = {...config, index: false};
-            const noIndexProvider = new AlgoliaProvider(mockRun as any, noIndexConfig);
+            const noIndexProvider = new AlgoliaProvider(
+                mockRun as unknown as BuildRun,
+                noIndexConfig,
+            );
 
             await noIndexProvider.addObjects();
 
@@ -148,11 +165,14 @@ describe('AlgoliaProvider', () => {
             expect(mockAlgoliaClient.replaceAllObjects).not.toHaveBeenCalled();
         });
 
-        it('should not upload to Algolia when uploadDuringBuild is false', async () => {
-            const noUploadConfig = {...config, uploadDuringBuild: false};
-            const noUploadProvider = new AlgoliaProvider(mockRun as any, noUploadConfig);
+        it('should not upload to Algolia when index is false', async () => {
+            const noIndexConfig = {...config, index: false};
+            const noIndexProvider = new AlgoliaProvider(
+                mockRun as unknown as BuildRun,
+                noIndexConfig,
+            );
 
-            await noUploadProvider.addObjects();
+            await noIndexProvider.addObjects();
 
             expect(mockRun.glob).not.toHaveBeenCalled();
             expect(mockAlgoliaClient.replaceAllObjects).not.toHaveBeenCalled();
@@ -181,7 +201,7 @@ describe('AlgoliaProvider', () => {
             };
 
             const providerWithQuerySettings = new AlgoliaProvider(
-                mockRun as any,
+                mockRun as unknown as BuildRun,
                 configWithQuerySettings,
             );
             const result = providerWithQuerySettings.config('en');
