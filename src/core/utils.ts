@@ -44,7 +44,6 @@ export async function uploadRecordsToAlgolia(
     );
 
     try {
-        // Update index settings
         await client.setSettings({
             indexName,
             indexSettings: {
@@ -57,13 +56,11 @@ export async function uploadRecordsToAlgolia(
             },
         });
 
-        // Upload objects to Algolia
         const response = await client[method]({
             indexName,
             objects: records as unknown as Record<string, unknown>[],
         });
         
-        // Check for taskID and wait for task completion
         if (response && (response as any).taskID) {
             await client.waitForTask({
                 indexName,
@@ -78,7 +75,7 @@ export async function uploadRecordsToAlgolia(
         );
     } catch (error) {
         logger.error(`Error updating index ${indexName}:`, error);
-        throw error; // Rethrow error as this is a critical operation
+        throw error;
     }
 }
 

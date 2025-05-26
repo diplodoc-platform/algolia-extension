@@ -6,7 +6,6 @@ const isDev = process.env.NODE_ENV === 'development';
 
 async function runBuild() {
   try {
-    // Основная сборка
     await build({
       entryPoints: ['src/index.ts'],
       outfile: 'dist/index.js',
@@ -28,7 +27,6 @@ async function runBuild() {
       ],
     });
 
-    // Копирование клиентского файла поиска
     try {
       await mkdir('dist/client', { recursive: true });
       await copyFile('src/client/search.js', 'dist/client/search.js');
@@ -37,7 +35,6 @@ async function runBuild() {
       console.error('Error copying client search file:', error);
     }
 
-    // Компиляция файла процессора воркера
     try {
       await mkdir('dist/workers', { recursive: true });
       await build({
