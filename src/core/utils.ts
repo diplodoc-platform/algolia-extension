@@ -76,9 +76,7 @@ export async function uploadRecordsToAlgolia(
             logger.warn(`No taskID found in response for index ${indexName}`);
         }
 
-        logger.info(
-            `Successfully uploaded to Algolia: ${indexName} (${lang}) - ${records.length} records`,
-        );
+        logger.info(`Successfully uploaded to Algolia: ${indexName} - ${records.length} records`);
     } catch (error) {
         logger.error(`Error updating index ${indexName}:`, error);
         throw error;

@@ -196,7 +196,7 @@ export class AlgoliaProvider implements SearchProvider {
             await this.run.write(jsonPath, JSON.stringify(this.objects[lang], null, 2));
 
             this.logger.info(
-                `Created local search index: ${lang} - ${this.objects[lang].length} records`,
+                `Created local search index: ${this.createIndexName(lang)} - ${this.objects[lang].length} records`,
             );
 
             if (!this.index || !this.client) {
