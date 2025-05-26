@@ -3,6 +3,7 @@
 /// <reference lib="webworker" />
 
 /* eslint-disable new-cap */
+/* eslint-env worker */
 
 // Default configuration
 const DEFAULT_CONFIG = {
@@ -11,13 +12,6 @@ const DEFAULT_CONFIG = {
     mark: 'search-highlight',
     base: '',
 };
-
-// Message type for initialization
-const INIT = 'init';
-// Message type for search
-const SEARCH = 'search';
-// Message type for suggestions
-const SUGGEST = 'suggest';
 
 // Number of words for trimming results
 const TRIM_WORDS = 10;

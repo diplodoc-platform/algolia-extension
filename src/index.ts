@@ -1,4 +1,4 @@
-import type {IExtension} from '@diplodoc/cli/lib/program';
+import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
 import {BaseArgs, BaseProgram, withConfigDefaults} from '@diplodoc/cli/lib/program';
 import {BuildRun, getBuildHooks, getSearchHooks} from '@diplodoc/cli';
@@ -29,6 +29,25 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     readonly options: ExtendedOption[] = Object.values(options);
 
     protected readonly modules = [];
+
+    async action(args: BaseArgs) {
+        const config = this.validateAndGetConfig(args);
+
+        this.logger.info(
+            'Starting Algolia indexing...',
+            config.indexName,
+            JSON.stringify(this.config),
+        );
+
+        const provider = this.createProvider(config);
+
+        try {
+            await provider.addObjects();
+        } catch (error) {
+            this.logger.error('Failed to upload index objects to Algolia:', error);
+            throw error;
+        }
+    }
 
     private validateAndGetConfig(args: BaseArgs): {
         appId: string;
@@ -72,36 +91,35 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             uploadDuringBuild: true,
         });
     }
+}
 
-    async action(args: BaseArgs) {
-        const config = this.validateAndGetConfig(args);
+interface SearchConfig {
+    appId?: string;
+    apiKey?: string;
+    indexName?: string;
+    searchKey?: string;
+    indexPrefix?: string;
+    provider?: string;
+}
 
-        this.logger.info(
-            'Starting Algolia indexing...',
-            config.indexName,
-            JSON.stringify(this.config),
-        );
-
-        const provider = this.createProvider(config);
-
-        try {
-            await provider.addObjects();
-        } catch (error) {
-            this.logger.error('Failed to upload index objects to Algolia:', error);
-            throw error;
-        }
-    }
+interface ExtensionConfig extends BaseConfig {
+    search?: SearchConfig;
 }
 
 export class Extension implements IExtension {
-    private addAlgoliaModule(program: BaseProgram<any>): void {
+    apply(program: BaseProgram<ExtensionConfig>): void {
+        this.addAlgoliaModule(program);
+        this.registerBuildHooks(program);
+    }
+
+    private addAlgoliaModule(program: BaseProgram<ExtensionConfig>): void {
         if (BaseProgram.is(program) && program.name === 'Program') {
             program.logger?.info('Adding AlgoliaProgram to Program');
             program.addModule(new AlgoliaProgram());
         }
     }
 
-    private registerBuildHooks(program: BaseProgram<any>): void {
+    private registerBuildHooks(program: BaseProgram<ExtensionConfig>): void {
         getBuildHooks(program)
             .BeforeRun.for('html')
             .tap('AlgoliaSearch', (run) => {
@@ -117,24 +135,18 @@ export class Extension implements IExtension {
             });
     }
 
-    private createAlgoliaProvider(run: BuildRun, config: Record<string, any>): AlgoliaProvider {
-        const indexName = get(config, 'search.indexName', 'docs-{lang}');
+    private createAlgoliaProvider(run: BuildRun, config: SearchConfig): AlgoliaProvider {
+        const indexName = get(config, 'indexName', 'docs-{lang}');
         const indexPrefix = indexName.replace('-{lang}', '');
 
         return new AlgoliaProvider(run, {
-            appId: process.env.ALGOLIA_APP_ID || config.appId,
-            apiKey: process.env.ALGOLIA_API_KEY || config.apiKey,
-            searchKey: config.searchKey || 'search-api-key',
+            appId: process.env.ALGOLIA_APP_ID || get(config, 'appId', ''),
+            apiKey: process.env.ALGOLIA_API_KEY || get(config, 'apiKey'),
+            searchKey: get(config, 'searchKey', 'search-api-key'),
             indexName,
             indexPrefix,
             api: API_LINK,
-            ...config,
         });
-    }
-
-    apply(program: BaseProgram<any>): void {
-        this.addAlgoliaModule(program);
-        this.registerBuildHooks(program);
     }
 }
 

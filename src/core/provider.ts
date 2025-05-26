@@ -9,7 +9,7 @@ import type {BuildRun, EntryInfo, SearchProvider} from '@diplodoc/cli';
 import {algoliasearch} from 'algoliasearch';
 import {join} from 'path';
 
-import {AlgoliaProviderConfig, AlgoliaRecord} from '../types';
+import {AlgoliaProviderConfig, AlgoliaRecord, DocumentMeta} from '../types';
 import {AlgoliaWorkerPool} from '../workers';
 
 import {processDocument} from './document-processor';
@@ -107,39 +107,6 @@ export class AlgoliaProvider implements SearchProvider {
         } else {
             this.processDocumentSync(path, lang, info.html, title, meta);
         }
-    }
-
-    private processDocumentSync(
-        path: string,
-        lang: string,
-        html: string,
-        title: string,
-        meta: any,
-    ): void {
-        const records = processDocument({path, lang, html, title, meta});
-
-        this.objects[lang] = this.objects[lang] || [];
-
-        this.objects[lang].push(...records);
-    }
-
-    private async uploadRecordsToAlgolia(
-        indexName: string,
-        lang: string,
-        records: AlgoliaRecord[],
-        method: 'replaceAllObjects' | 'saveObjects' = 'replaceAllObjects',
-    ): Promise<void> {
-        const client = ensureClient(this.client);
-        await uploadRecordsToAlgolia(
-            client,
-            indexName,
-            lang,
-            records,
-            method,
-            DEFAULT_INDEX_SETTINGS,
-            this.indexSettings,
-            this.logger,
-        );
     }
 
     async addObjects(): Promise<void> {
@@ -251,5 +218,38 @@ export class AlgoliaProvider implements SearchProvider {
 
     private ensureClient(): Algoliasearch {
         return ensureClient(this.client);
+    }
+
+    private processDocumentSync(
+        path: string,
+        lang: string,
+        html: string,
+        title: string,
+        meta: DocumentMeta,
+    ): void {
+        const records = processDocument({path, lang, html, title, meta});
+
+        this.objects[lang] = this.objects[lang] || [];
+
+        this.objects[lang].push(...records);
+    }
+
+    private async uploadRecordsToAlgolia(
+        indexName: string,
+        lang: string,
+        records: AlgoliaRecord[],
+        method: 'replaceAllObjects' | 'saveObjects' = 'replaceAllObjects',
+    ): Promise<void> {
+        const client = ensureClient(this.client);
+        await uploadRecordsToAlgolia(
+            client,
+            indexName,
+            lang,
+            records,
+            method,
+            DEFAULT_INDEX_SETTINGS,
+            this.indexSettings,
+            this.logger,
+        );
     }
 }
