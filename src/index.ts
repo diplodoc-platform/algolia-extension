@@ -11,7 +11,6 @@ import { AlgoliaProvider } from "./core/provider";
 import { options } from "./config";
 import { AlgoliaConfig } from "./types";
 
-// Constant for API file path
 const API_LINK = '_search/api.js';
 
 @withConfigDefaults(() => ({
@@ -37,7 +36,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
         appId: string;
         apiKey: string;
         indexName: string;
-        projectName: string;
     } {
         const { input } = args;
         const { appId, apiKey } = this.config.search;
@@ -46,13 +44,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             throw new Error("Input path is required");
         }
 
-        // indexName is used as project name, or if project name is not set, we use indexName
-        const projectName = get(
-            this.config,
-            "docs-viewer.project-name", "",
-        );
-
-        const indexName = get(this.config, "search.indexName", '') || (projectName + '-{lang}');
+        const indexName = get(this.config, "search.indexName", 'docs-{lang}');
 
         if (!appId || !apiKey || !indexName) {
             throw new Error(
@@ -60,18 +52,16 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             );
         }
 
-        return { appId, apiKey, indexName, projectName };
+        return { appId, apiKey, indexName };
     }
 
     private createProvider(config: {
         appId: string;
         apiKey: string;
         indexName: string;
-        projectName: string;
     }): AlgoliaProvider {
         const { appId, apiKey, indexName } = config;
         
-        // Calculate index prefix
         const indexPrefix = indexName.replace('-{lang}', '');
         
         return new AlgoliaProvider(
@@ -89,20 +79,17 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     }
 
     async action(args: BaseArgs) {
-        // Get and validate configuration
         const config = this.validateAndGetConfig(args);
         
         this.logger.info(
             "Starting Algolia indexing...",
-            config.projectName,
+            config.indexName,
             JSON.stringify(this.config)
         );
         
-        // Create provider
         const provider = this.createProvider(config);
 
         try {
-            // Perform indexing
             await provider.addObjects();
         } catch (error) {
             this.logger.error(
@@ -115,7 +102,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 }
 
 
-// Extension class implementing IExtension interface
 export class Extension implements IExtension {
     private addAlgoliaModule(program: BaseProgram<any>): void {
         if (BaseProgram.is(program) && program.name === "Program") {
@@ -141,12 +127,7 @@ export class Extension implements IExtension {
     }
 
     private createAlgoliaProvider(run: BuildRun, config: Record<string, any>): AlgoliaProvider {
-        const projectName = get(
-            config,
-            "docs-viewer.project-name", "",
-        );
-        
-        const indexName = get(config, "search.indexName", '') || (projectName + '-{lang}');
+        const indexName = get(config, "search.indexName", 'docs-{lang}');
         const indexPrefix = indexName.replace('-{lang}', '');
 
         return new AlgoliaProvider(run, {
@@ -161,13 +142,9 @@ export class Extension implements IExtension {
     }
 
     apply(program: BaseProgram<any>): void {
-        // Add AlgoliaProgram module to the main program
         this.addAlgoliaModule(program);
-
-        // Register hooks for integration with build system
         this.registerBuildHooks(program);
     }
 }
 
-// Default export for compatibility
 export default Extension;
