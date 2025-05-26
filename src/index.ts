@@ -33,11 +33,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     async action(args: BaseArgs) {
         const config = this.validateAndGetConfig(args);
 
-        this.logger.info(
-            'Starting Algolia indexing...',
-            config.indexName,
-            JSON.stringify(this.config),
-        );
+        this.logger.info('Starting Algolia indexing...', config.indexName);
 
         const provider = this.createProvider(config);
 

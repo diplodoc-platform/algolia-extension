@@ -38,8 +38,7 @@ export class AlgoliaWorkerPool {
             this.workerPath = devPath;
         } catch {
             // If failed, use absolute path for production
-            this.workerPath = join(process.cwd(), 'dist', 'workers', 'processor.js');
-            this.logger.info(`Using worker path: ${this.workerPath}`);
+            this.workerPath = join(process.cwd(), 'dist', 'src', 'workers', 'processor.js');
         }
     }
 
