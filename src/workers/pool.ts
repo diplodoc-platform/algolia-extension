@@ -28,18 +28,7 @@ export class AlgoliaWorkerPool {
     constructor(maxWorkers = 4) {
         this.maxWorkers = Math.max(1, Math.min(maxWorkers, require('os').cpus().length - 1));
 
-        // Define path to processor file
-        // In development: src/workers/processor.js
-        // In production: dist/workers/processor.js
-        try {
-            // Try to use relative path for development
-            const devPath = join(__dirname, 'processor.js');
-            require.resolve(devPath);
-            this.workerPath = devPath;
-        } catch {
-            // If failed, use absolute path for production
-            this.workerPath = join(process.cwd(), 'dist', 'src', 'workers', 'processor.js');
-        }
+        this.workerPath = join(process.cwd(), 'dist', 'src', 'workers', 'processor.js');
     }
 
     initialize(): void {
