@@ -1,201 +1,192 @@
 # Algolia Extension for Diplodoc
 
-This extension provides Algolia search integration for Diplodoc documentation. It handles the indexing of documentation content into Algolia indices and manages search functionality.
+This extension provides [Algolia](https://www.algolia.com/) search integration for [Diplodoc](https://diplodoc.com/) documentation. It enables powerful search functionality for your documentation by indexing content into Algolia and providing a seamless search experience for your users.
 
-## Project Structure
+## Features
 
-```
-extensions/algolia/
-├── src/
-│   ├── index.ts                # Main extension entry point and CLI program
-│   ├── config/                 # Configuration
-│   │   ├── index.ts            # Configuration exports
-│   │   └── options.ts          # Command line options
-│   ├── core/                   # Core functionality
-│   │   ├── index.ts            # Core exports
-│   │   ├── provider.ts         # Algolia provider implementation
-│   │   └── document-processor.ts # Document processing utilities
-│   ├── workers/                # Parallel processing
-│   │   ├── index.ts            # Workers exports
-│   │   ├── pool.ts             # Worker pool for parallel processing
-│   │   └── processor.ts        # Worker thread implementation
-│   ├── client/                 # Client-side code
-│   │   ├── index.ts            # Client exports
-│   │   └── search.js           # Client-side search implementation
-│   └── types/                  # Type definitions
-│       └── index.ts            # TypeScript type definitions
-├── dist/                      # Compiled JavaScript output
-└── package.json               # Package configuration and dependencies
-```
+- Automatic indexing of documentation content
+- Multi-language support
+- Customizable search settings
+- Parallel processing for fast indexing
+- Section-based search results for precise navigation
+- Client-side search implementation
 
-## Core Components
-
-### Main Components
-
-#### `index.ts`
-Main entry point of the extension that implements the CLI program. Key features:
-- Defines the `AlgoliaProgram` class that extends `BaseProgram`
-- Handles command-line arguments and configuration
-- Integrates with Diplodoc's build and search hooks
-- Manages the indexing process during documentation builds
-
-### Core Module
-
-#### `core/provider.ts`
-Implements the core Algolia functionality:
-- `AlgoliaProvider` class for managing Algolia indices
-- Methods for adding and processing documentation content
-- Handles multi-language support
-- Manages index settings and configurations
-- Provides search functionality
-
-Key methods:
-- `add(path, lang, info)`: Processes and adds documentation content to the index
-- `addObjects()`: Uploads processed content to Algolia
-- `clearIndex()`: Removes all objects from the index
-- `setSettings(settings)`: Updates index configuration
-- `release()`: Finalizes the indexing process
-
-#### `core/document-processor.ts`
-Contains utilities for processing HTML documents:
-- `processDocument()`: Converts HTML to Algolia records
-- `splitDocumentIntoSections()`: Divides documents into searchable sections
-- `extractHeadings()`: Extracts headings from HTML content
-- `splitAndAddLargeRecord()`: Handles large content by splitting into chunks
-
-### Workers Module
-
-#### `workers/pool.ts`
-Implements worker pool for parallel processing:
-- `AlgoliaWorkerPool`: Manages a pool of worker threads
-- Distributes document processing tasks across multiple CPU cores
-- Handles worker lifecycle and error recovery
-- Collects and aggregates results from workers
-
-#### `workers/processor.ts`
-Worker thread implementation:
-- Processes HTML documents in separate threads
-- Communicates with the main thread via messages
-- Handles errors and returns results
-
-### Configuration Module
-
-#### `config/options.ts`
-Contains configuration options:
-- Defines command-line options for the extension
-- Provides environment variable integration
-
-### Types Module
-
-#### `types/index.ts`
-TypeScript type definitions:
-- `AlgoliaRecord`: Structure for indexed documentation content
-- `AlgoliaProviderConfig`: Configuration for the Algolia provider
-- `DocumentProcessingContext`: Context for document processing
-- Message types for worker communication
-
-### Client Module
-
-#### `client/search.js`
-Client-side search implementation:
-- Web worker for browser-based search
-- Communicates with Algolia API
-- Formats search results for display
-
-## Usage
-
-### Installation
+## Installation
 
 ```bash
 npm install @diplodoc/algolia
 ```
 
-### Configuration
+## How Indexing Works
 
-The extension can be configured through:
-- Environment variables:
-  - `ALGOLIA_APP_ID`
-  - `ALGOLIA_API_KEY`
-  - `ALGOLIA_INDEX_NAME`
-- Command-line arguments:
-  - `--app-id`
-  - `--api-key`
-  - `--index-name`
-  - `--input` (path to documentation)
+By default, the extension only creates local search indices in the `_search` directory of your output folder. These local indices are JSON files that contain the processed documentation content.
 
-### Integration
+To upload these indices to Algolia, you need to either:
 
-The extension automatically integrates with Diplodoc's build process:
-1. During documentation build, content is processed and indexed
-2. Search functionality is automatically enabled
-3. Multi-language support is handled automatically
+1. Set the `index` parameter to `true` during the build process
+2. Run the dedicated `index` command after building the documentation
 
-## Development
+## Configuration
 
-To work on the extension:
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Build the extension: `npm run build`
-4. Test changes in your Diplodoc project
+### Required Configuration
 
-### Testing Examples
+To use this extension, you need to provide Algolia credentials:
 
-Here are some practical examples for testing the extension:
+| Parameter  | Environment Variable | CLI Option     | Description                                               |
+| ---------- | -------------------- | -------------- | --------------------------------------------------------- |
+| App ID     | `ALGOLIA_APP_ID`     | `--app-id`     | Your Algolia application ID                               |
+| API Key    | `ALGOLIA_API_KEY`    | `--api-key`    | Your Algolia admin API key (for indexing)                 |
+| Index Name | `ALGOLIA_INDEX_NAME` | `--index-name` | Name of the Algolia index (supports `{lang}` placeholder) |
 
-1. **Basic Build and Index**
+### Optional Configuration
+
+| Parameter  | CLI Option | Default | Description                                      |
+| ---------- | ---------- | ------- | ------------------------------------------------ |
+| Input Path | `--input`  | `./`    | Path to documentation directory                  |
+| Index      | `--index`  | `false` | Whether to create and upload an index for search |
+
+### Configuration Methods
+
+You can configure the extension using three different methods:
+
+1. **Environment Variables**
+
+   - Set environment variables before running the CLI
+   - Useful for CI/CD pipelines and secure storage of API keys
+   - Example: `ALGOLIA_APP_ID`, `ALGOLIA_API_KEY`, `ALGOLIA_INDEX_NAME`
+
+2. **CLI Flags**
+
+   - Pass options directly to the CLI command
+   - Overrides environment variables
+   - Example: `--app-id`, `--api-key`, `--index-name`
+
+3. **Configuration File (.yfm)**
+   - Add configuration to your `.yfm` file
+   - Useful for project-specific settings
+   - **Note:** Do not store sensitive information like API keys in this file as it may be committed to version control
+
+Example priority: CLI flags > Environment variables > Configuration file
+
+## Usage
+
+### Basic Usage with Diplodoc CLI
+
+The extension can be used with the [Diplodoc CLI](https://github.com/diplodoc-platform/cli) by adding it to the extensions parameter:
+
 ```bash
-# Build documentation and index it to Algolia
-node build/index.js -i ../../../docs -o ../../../docs-o --extensions /path/to/algolia/dist/index.js
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia
 ```
 
-2. **Index Only Command**
-```bash
-# Only run the indexing process (useful for testing index updates)
-node build/index.js index -i ../../../docs-o --extensions /path/to/algolia/dist/index.js
-```
+### Method 1: Using Environment Variables
 
-3. **With Environment Variables**
 ```bash
-# Set Algolia credentials via environment variables
 export ALGOLIA_APP_ID="your-app-id"
 export ALGOLIA_API_KEY="your-api-key"
 export ALGOLIA_INDEX_NAME="your-index-name"
-node build/index.js -i ../../../docs -o ../../../docs-o --extensions /path/to/algolia/dist/index.js
+
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia
 ```
 
-4. **With Command Line Arguments**
+### Method 2: Using CLI Flags
+
 ```bash
-# Provide credentials via command line
-node build/index.js -i ../../../docs -o ../../../docs-o \
-  --extensions /path/to/algolia/dist/index.js \
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs \
+  --extensions @diplodoc/algolia \
+  --app-id "your-app-id" \
+  --api-key "your-api-key" \
+  --index-name "your-index-name" \
+  --index
+```
+
+### Method 3: Using Configuration File (.yfm)
+
+```yaml
+# .yfm file
+search:
+  provider: algolia
+  appId: your-app-id
+  # Do not include apiKey here for security reasons
+  indexName: docs-{lang}
+  index: true
+```
+
+Then run:
+
+```bash
+# API key should be provided via environment variable or CLI flag
+export ALGOLIA_API_KEY="your-api-key"
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia
+```
+
+### Using the Index Command
+
+The extension provides a dedicated `index` command for indexing documentation without rebuilding it:
+
+```bash
+npx -y @diplodoc/cli index -i ~/output-docs --extensions @diplodoc/algolia
+```
+
+This is useful when you want to update the search index without rebuilding the entire documentation. The `index` command processes the already built documentation and uploads it to Algolia.
+
+Options for the `index` command:
+
+```bash
+npx -y @diplodoc/cli index -i ~/output-docs \
+  --extensions @diplodoc/algolia \
   --app-id "your-app-id" \
   --api-key "your-api-key" \
   --index-name "your-index-name"
 ```
 
-5. **Debug Mode**
-```bash
-# Enable debug logging
-DEBUG=diplodoc:* node build/index.js -i ../../../docs -o ../../../docs-o --extensions /path/to/algolia/dist/index.js
+## Search Configuration
+
+### Client-Side Configuration
+
+The extension automatically generates the necessary client-side configuration for search:
+
+```html
+<!-- This is automatically included in your documentation -->
+<script src="_search/api.js"></script>
 ```
 
-### Testing Tips
+### Search Settings
 
-1. **Local Development**
-   - Use a separate Algolia index for testing
-   - Monitor the `_search` directory in your output folder for generated JSON files
-   - Check Algolia dashboard for indexed content
+You can customize the search settings in your `.yfm` configuration file:
 
-2. **Troubleshooting**
-   - If indexing fails, check the generated JSON files in `_search` directory
-   - Verify Algolia credentials and index permissions
-   - Use debug mode for detailed logging
+```yaml
+# .yfm file
+search:
+  provider: algolia
+  appId: your-app-id
+  indexName: docs-{lang}
+  index: true
+  indexSettings:
+    # Algolia index settings
+    searchableAttributes:
+      - title
+      - content
+      - headings
+      - keywords
+    attributesToHighlight:
+      - title
+      - content
+  querySettings:
+    # Algolia query settings
+    hitsPerPage: 10
+    attributesToRetrieve:
+      - title
+      - content
+      - url
+      - section
+```
 
-3. **Common Issues**
-   - Missing environment variables: Ensure all required Algolia credentials are set
-   - Permission errors: Verify API key has correct permissions
-   - Index not updating: Check if `uploadDuringBuild` is enabled in configuration
+## Resources
+
+- [Diplodoc Documentation](https://diplodoc.com/)
+- [Diplodoc CLI Repository](https://github.com/diplodoc-platform/cli)
+- [Algolia Documentation](https://www.algolia.com/doc/)
 
 ## License
 
-MIT 
+MIT
