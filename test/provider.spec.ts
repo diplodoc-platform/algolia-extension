@@ -10,6 +10,10 @@ jest.mock('algoliasearch');
 
 jest.mock('../src/core/utils', () => {
     return {
+        ALGOLIA_METHODS: {
+            REPLACE_ALL_OBJECTS: 'replaceAllObjects',
+            SAVE_OBJECTS: 'saveObjects',
+        },
         IndexLogger: jest.fn().mockImplementation(() => ({
             info: jest.fn(),
             warn: jest.fn(),
@@ -110,7 +114,7 @@ describe('AlgoliaProvider', () => {
             const configWithoutPrefix = {
                 appId: 'test-app-id',
                 apiKey: 'test-api-key',
-                indexName: 'docs-{lang}',
+                indexName: 'docs',
                 searchKey: 'test-search-key',
             };
 

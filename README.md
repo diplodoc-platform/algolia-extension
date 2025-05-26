@@ -32,11 +32,11 @@ To upload these indices to Algolia, you need to either:
 
 To use this extension, you need to provide Algolia credentials:
 
-| Parameter  | Environment Variable | CLI Option     | Description                                               |
-| ---------- | -------------------- | -------------- | --------------------------------------------------------- |
-| App ID     | `ALGOLIA_APP_ID`     | `--app-id`     | Your Algolia application ID                               |
-| API Key    | `ALGOLIA_API_KEY`    | `--api-key`    | Your Algolia admin API key (for indexing)                 |
-| Index Name | `ALGOLIA_INDEX_NAME` | `--index-name` | Name of the Algolia index (supports `{lang}` placeholder) |
+| Parameter  | Environment Variable | CLI Option     | Description                               |
+| ---------- | -------------------- | -------------- | ----------------------------------------- |
+| App ID     | `ALGOLIA_APP_ID`     | `--app-id`     | Your Algolia application ID               |
+| API Key    | `ALGOLIA_API_KEY`    | `--api-key`    | Your Algolia admin API key (for indexing) |
+| Index Name | `ALGOLIA_INDEX_NAME` | `--index-name` | Name of the Algolia index                 |
 
 ### Optional Configuration
 
@@ -121,7 +121,7 @@ search:
   provider: algolia
   appId: your-app-id
   # Do not include apiKey here for security reasons
-  indexName: docs-{lang}
+  indexName: docs
   index: true
 ```
 
@@ -173,7 +173,7 @@ You can customize the search settings in your `.yfm` configuration file:
 search:
   provider: algolia
   appId: your-app-id
-  indexName: docs-{lang}
+  indexName: docs
   index: true
   indexSettings:
     # Algolia index settings
