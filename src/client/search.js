@@ -44,7 +44,6 @@ self.api = {
         };
     },
 
-    // Search for suggestions
     async suggest(query) {
         AssertConfig(config);
 
@@ -53,7 +52,6 @@ self.api = {
         return format(config, results);
     },
 
-    // Full search
     async search(query) {
         AssertConfig(config);
 
@@ -63,7 +61,6 @@ self.api = {
     },
 };
 
-// Search function
 async function search(config, query) {
     const {appId, searchKey, indexName, querySettings, mark} = config;
 
