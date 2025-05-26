@@ -6,15 +6,12 @@ export function extractHeadings(html: string): string[] {
     const $ = load(html);
     const headings: string[] = [];
 
-    // Select all h1-h6 elements and extract their text
     $("h1, h2, h3, h4, h5, h6").each((_, element) => {
-        // Get text content using contents() for proper handling of nested elements
         const textPieces = $(element)
             .contents()
             .map((_, el) => $(el).text())
             .get();
 
-        // Use Set to ensure uniqueness
         const uniqueText = [...new Set(textPieces)].join("").trim();
 
         if (uniqueText) {
@@ -34,7 +31,6 @@ export function splitAndAddLargeRecord(
     const content = record.content;
     const chunks = Math.ceil(content.length / chunkSize);
 
-    // If record doesn't need splitting, add it as is
     if (chunks <= 1) {
         acc.push(record);
         return;
@@ -56,9 +52,7 @@ export function splitAndAddLargeRecord(
 }
 
 export function getRecordSize(record: AlgoliaRecord): number {
-    // Convert to JSON string with minimal spacing
     const jsonString = JSON.stringify(record);
-    // Get size in bytes (UTF-8 encoding)
     return Buffer.from(jsonString).length;
 }
 
@@ -71,15 +65,12 @@ export function splitDocumentIntoSections(html: string): {
     let currentSection: DocumentSection = { heading: "", content: "", anchor: "" };
     let mainHeading = '';
 
-    // Process all elements to divide into sections
     $("body")
         .children()
         .each((_, element) => {
             const $el = $(element);
 
-            // If this is a heading, start a new section
             if ($el.is("h1, h2, h3, h4, h5, h6")) {
-                // Save previous section if it has content
                 if (currentSection.content.trim()) {
                     sections.push({ ...currentSection });
                 }
@@ -105,12 +96,10 @@ export function splitDocumentIntoSections(html: string): {
                     content: "",
                 };
             } else {
-                // Add content to current section
                 currentSection.content += $el.text().trim() + " ";
             }
         });
 
-    // Add the last section if it has content
     if (currentSection.content.trim()) {
         sections.push({ ...currentSection });
     }
@@ -139,10 +128,8 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
     const baseTitle = title || meta.title || mainHeading || "";
     const baseKeywords = meta.keywords || [];
     
-    // Maximum record size in bytes (slightly less than Algolia's 10KB limit)
     const MAX_RECORD_SIZE = 9600;
 
-    // If no sections found, create a single record
     if (sections.length === 0) {
         const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords);
         const record: AlgoliaRecord = {
@@ -153,7 +140,6 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
             anchor: '',
         };
 
-        // Check if record needs to be split
         if (getRecordSize(record) >= MAX_RECORD_SIZE) {
             splitAndAddLargeRecord(record, records);
         } else {
@@ -162,7 +148,6 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
         return records;
     }
 
-    // Create records for each section
     sections.forEach((section, index) => {
         const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords);
         const record: AlgoliaRecord = {
@@ -174,7 +159,6 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
             section: section.heading || undefined,
         };
 
-        // Check if record needs to be split
         if (getRecordSize(record) >= MAX_RECORD_SIZE) {
             splitAndAddLargeRecord(record, records);
         } else {

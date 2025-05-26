@@ -7,8 +7,6 @@ import type {
 import type { BuildRun, EntryInfo, SearchProvider } from "@diplodoc/cli";
 
 import { algoliasearch } from "algoliasearch";
-import { uniq } from "lodash";
-import { LogLevel, Logger } from "@diplodoc/cli/lib/logger";
 import { join } from "path";
 
 import {
@@ -16,11 +14,16 @@ import {
     AlgoliaRecord
 } from "../types";
 import { processDocument } from "./document-processor";
-import { AlgoliaWorkerPool } from "../workers/pool";
-
-class IndexLogger extends Logger {
-    index = this.topic(LogLevel.INFO, "INDEX");
-}
+import { AlgoliaWorkerPool } from "../workers";
+import {
+    IndexLogger,
+    DEFAULT_INDEX_SETTINGS,
+    getBaseLang,
+    pageLink,
+    createIndexName,
+    uploadRecordsToAlgolia,
+    ensureClient
+} from "./utils";
 
 export class AlgoliaProvider implements SearchProvider {
     private index: boolean;
@@ -38,23 +41,16 @@ export class AlgoliaProvider implements SearchProvider {
     private apiLink: string;
     private workerPool?: AlgoliaWorkerPool;
 
-    private defaultSettings: IndexSettings = {
-        distinct: 1,
-        attributeForDistinct: 'url',
-    }
-
     constructor(run: BuildRun, config: AlgoliaProviderConfig) {
         this.run = run;
         this.index = config.index !== false;
         this.uploadDuringBuild = config.uploadDuringBuild !== false;
         
-        // Check required parameters
         if (!config.appId) {
             this.logger.error('Algolia appId is not specified');
         }
         this.appId = config.appId;
         
-        // Ensure that indexPrefix always has a value
         if (!config.indexName && !config.indexPrefix) {
             this.logger.warn('Index name (indexName) is not specified. Using default value "docs"');
         }
@@ -87,7 +83,6 @@ export class AlgoliaProvider implements SearchProvider {
             this.logger.pipe(run.logger);
         }
         
-        // Initialize worker pool for parallel document processing
         try {
             this.workerPool = new AlgoliaWorkerPool();
             this.workerPool.initialize();
@@ -108,16 +103,13 @@ export class AlgoliaProvider implements SearchProvider {
 
         const { title = "", meta = {} } = info;
 
-        // Skip pages marked as noIndex
         if (meta.noIndex) {
             return;
         }
 
-        // Add task to worker pool for parallel processing
         if (this.workerPool) {
             this.workerPool.addTask(path, lang, info.html, title, meta);
         } else {
-            // If worker pool is not initialized, use sequential processing
             this.processDocumentSync(path, lang, info.html, title, meta);
         }
     }
@@ -129,13 +121,10 @@ export class AlgoliaProvider implements SearchProvider {
         title: string,
         meta: any
     ): void {
-        // Use common document processing logic
         const records = processDocument({ path, lang, html, title, meta });
         
-        // Initialize array for current language if it doesn't exist yet
         this.objects[lang] = this.objects[lang] || [];
         
-        // Add all records to the array
         this.objects[lang].push(...records);
     }
 
@@ -146,50 +135,17 @@ export class AlgoliaProvider implements SearchProvider {
         records: AlgoliaRecord[],
         method: 'replaceAllObjects' | 'saveObjects' = 'replaceAllObjects'
     ): Promise<void> {
-        const client = this.ensureClient();
-        const baseLang = getBaseLang(lang);
-
-        this.logger.info(
-            `Name: ${indexName}, Lang: ${lang}, Records: ${records.length}`,
+        const client = ensureClient(this.client);
+        await uploadRecordsToAlgolia(
+            client,
+            indexName,
+            lang,
+            records,
+            method,
+            DEFAULT_INDEX_SETTINGS,
+            this.indexSettings,
+            this.logger
         );
-
-        try {
-            // Update index settings
-            await client.setSettings({
-                indexName,
-                indexSettings: {
-                    ...this.defaultSettings,
-                    ...this.indexSettings,
-                    indexLanguages: uniq([
-                        lang,
-                        baseLang,
-                    ]) as SupportedLanguage[],
-                },
-            });
-
-            // Upload objects to Algolia
-            const response = await client[method]({
-                indexName,
-                objects: records as unknown as Record<string, unknown>[],
-            });
-            
-            // Check for taskID and wait for task completion
-            if (response && (response as any).taskID) {
-                await client.waitForTask({
-                    indexName,
-                    taskID: (response as any).taskID,
-                });
-            } else {
-                this.logger.warn(`Failed to get taskID for index ${indexName}. Skipping task completion wait.`);
-            }
-
-            this.logger.info(
-                `Index ${indexName} updated with ${records.length} records`,
-            );
-        } catch (error) {
-            this.logger.error(`Error updating index ${indexName}:`, error);
-            throw error; // Rethrow error as this is a critical operation
-        }
     }
 
     async addObjects(): Promise<void> {
@@ -215,7 +171,7 @@ export class AlgoliaProvider implements SearchProvider {
             const content = await this.run.read(filePath);
             const records = JSON.parse(content) as AlgoliaRecord[];
 
-            const indexName = `${this.indexPrefix}-${lang}`;
+            const indexName = createIndexName(this.indexPrefix, lang);
             
             // Upload records to Algolia
             await this.uploadRecordsToAlgolia(indexName, lang, records, 'replaceAllObjects');
@@ -229,7 +185,7 @@ export class AlgoliaProvider implements SearchProvider {
 
         const client = this.ensureClient();
         for (const lang of Object.keys(this.objects)) {
-            const indexName = `${this.indexPrefix}-${lang}`;
+            const indexName = createIndexName(this.indexPrefix, lang);
             await client.clearObjects({ indexName });
         }
     }
@@ -241,18 +197,15 @@ export class AlgoliaProvider implements SearchProvider {
 
         const client = this.ensureClient();
         for (const lang of Object.keys(this.objects)) {
-            const indexName = `${this.indexPrefix}-${lang}`;
+            const indexName = createIndexName(this.indexPrefix, lang);
             const baseLang = getBaseLang(lang);
 
             await client.setSettings({
                 indexName,
                 indexSettings: {
-                    ...this.defaultSettings,
+                    ...DEFAULT_INDEX_SETTINGS,
                     ...settings,
-                    indexLanguages: uniq([
-                        lang,
-                        baseLang,
-                    ]) as SupportedLanguage[],
+                    indexLanguages: [lang, baseLang] as SupportedLanguage[],
                 },
             });
         }
@@ -300,43 +253,26 @@ export class AlgoliaProvider implements SearchProvider {
                 continue;
             }
 
-            const indexName = `${this.indexPrefix}-${lang}`;
+            const indexName = createIndexName(this.indexPrefix, lang);
             
             // Upload records to Algolia
             await this.uploadRecordsToAlgolia(indexName, lang, this.objects[lang], 'saveObjects');
         }
     }
 
-    config(lang: string): Record<string, any> {
+    config(lang: string) {
         return {
             provider: "algolia",
             api: this.apiLink,
             link: pageLink(lang),
             appId: this.appId,
-            indexName: `${this.indexPrefix}-${lang}`,
+            indexName: createIndexName(this.indexPrefix, lang),
             searchKey: this.searchKey,
             querySettings: this.querySettings,
         };
     }
 
     private ensureClient(): Algoliasearch {
-        if (!this.client) {
-            throw new Error(
-                "Algolia client not initialized. Please provide an API key.",
-            );
-        }
-        return this.client;
+        return ensureClient(this.client);
     }
-}
-
-function getBaseLang(lang: string): string {
-    if (["ru", "be", "kz", "ua"].includes(lang)) {
-        return "ru";
-    }
-
-    return "en";
-}
-
-function pageLink(lang: string): string {
-    return join("_search", lang, `index.html`);
 }
