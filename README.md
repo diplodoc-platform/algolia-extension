@@ -68,6 +68,20 @@ You can configure the extension using three different methods:
 
 Example priority: CLI flags > Environment variables > Configuration file
 
+### Parameter Availability by Configuration Method
+
+| Parameter     | CLI Flag            | Environment Variable | .yfm Config            | Description                                                     |
+| ------------- | ------------------- | -------------------- | ---------------------- | --------------------------------------------------------------- |
+| appId         | `--app-id`          | `ALGOLIA_APP_ID`     | `search.appId`         | Algolia Application ID                                          |
+| apiKey        | `--api-key`         | `ALGOLIA_API_KEY`    | `search.apiKey`        | Algolia API Key for indexing                                    |
+| indexName     | `--index-name`      | `ALGOLIA_INDEX_NAME` | `search.indexName`     | Index name (e.g., "docs")                                       |
+| index         | `--index`           | -                    | `search.index`         | Whether to upload indices to Algolia (default: false)           |
+| searchKey     | `--search-key`      | `ALGOLIA_SEARCH_KEY` | `search.searchKey`     | Client-side API key for search (default: "search-api-key")      |
+| provider      | `--search-provider` | `ALGOLIA_PROVIDER`   | `search.provider`      | Search provider name (default: "algolia")                       |
+| api           | `--search-api`      | `ALGOLIA_API_PATH`   | `search.api`           | Path to the client-side search API (default: "\_search/api.js") |
+| indexSettings | -                   | -                    | `search.indexSettings` | Algolia index settings (searchable attributes, etc.)            |
+| querySettings | -                   | -                    | `search.querySettings` | Algolia query settings (hits per page, etc.)                    |
+
 ## Usage
 
 ### Basic Usage with Diplodoc CLI

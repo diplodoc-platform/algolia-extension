@@ -6,6 +6,13 @@ import {join} from 'path';
 
 import {AlgoliaRecord} from '../types';
 
+export const ALGOLIA_METHODS = {
+    REPLACE_ALL_OBJECTS: 'replaceAllObjects' as const,
+    SAVE_OBJECTS: 'saveObjects' as const,
+};
+
+export type AlgoliaMethod = (typeof ALGOLIA_METHODS)[keyof typeof ALGOLIA_METHODS];
+
 export class IndexLogger extends Logger {
     index = this.topic(LogLevel.INFO, 'INDEX');
 }
@@ -22,16 +29,12 @@ export function pageLink(lang: string): string {
     return join('_search', lang, `index.html`);
 }
 
-export function createIndexName(prefix: string, lang: string): string {
-    return `${prefix}-${lang}`;
-}
-
 export async function uploadRecordsToAlgolia(
     client: Algoliasearch,
     indexName: string,
     lang: string,
     records: AlgoliaRecord[],
-    method: 'replaceAllObjects' | 'saveObjects',
+    method: AlgoliaMethod,
     defaultSettings: Partial<IndexSettings>,
     indexSettings: Partial<IndexSettings>,
     logger: IndexLogger,
