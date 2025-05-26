@@ -50,20 +50,27 @@ export async function uploadRecordsToAlgolia(
             },
         });
 
-        const response = await client[method]({
+        const result = await client[method]({
             indexName,
             objects: records as unknown as Record<string, unknown>[],
         });
 
-        if (response && 'taskID' in response && typeof response.taskID === 'number') {
-            await client.waitForTask({
-                indexName,
-                taskID: response.taskID,
-            });
-        } else {
-            logger.warn(
-                `Failed to get taskID for index ${indexName}. Skipping task completion wait.`,
+        const taskIDs = findTaskIDs(result);
+
+        if (taskIDs.length > 0) {
+            await Promise.all(
+                taskIDs.map((taskID) =>
+                    client
+                        .waitForTask({indexName, taskID})
+                        .catch((error) =>
+                            logger.warn(
+                                `Error waiting for task ${taskID}: ${error instanceof Error ? error.message : String(error)}`,
+                            ),
+                        ),
+                ),
             );
+        } else {
+            logger.warn(`No taskID found in response for index ${indexName}`);
         }
 
         logger.info(`Index ${indexName} updated with ${records.length} records`);
@@ -71,6 +78,27 @@ export async function uploadRecordsToAlgolia(
         logger.error(`Error updating index ${indexName}:`, error);
         throw error;
     }
+}
+
+function findTaskIDs(obj: unknown): number[] {
+    if (!obj || typeof obj !== 'object') return [];
+
+    const result: number[] = [];
+    const objRecord = obj as Record<string, unknown>;
+
+    if ('taskID' in objRecord && typeof objRecord.taskID === 'number') {
+        result.push(objRecord.taskID);
+    }
+
+    Object.values(objRecord).forEach((value) => {
+        if (Array.isArray(value)) {
+            value.forEach((item) => result.push(...findTaskIDs(item)));
+        } else if (value && typeof value === 'object') {
+            result.push(...findTaskIDs(value));
+        }
+    });
+
+    return result;
 }
 
 export function ensureClient(client?: Algoliasearch): Algoliasearch {
