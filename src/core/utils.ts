@@ -38,7 +38,7 @@ export async function uploadRecordsToAlgolia(
 ): Promise<void> {
     const baseLang = getBaseLang(lang);
 
-    logger.info(`Name: ${indexName}, Lang: ${lang}, Records: ${records.length}`);
+    logger.info(`Uploading to Algolia: ${indexName} - ${records.length} records`);
 
     try {
         await client.setSettings({
@@ -73,7 +73,9 @@ export async function uploadRecordsToAlgolia(
             logger.warn(`No taskID found in response for index ${indexName}`);
         }
 
-        logger.info(`Index ${indexName} updated with ${records.length} records`);
+        logger.info(
+            `Successfully uploaded to Algolia: ${indexName} (${lang}) - ${records.length} records`,
+        );
     } catch (error) {
         logger.error(`Error updating index ${indexName}:`, error);
         throw error;

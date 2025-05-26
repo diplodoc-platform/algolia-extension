@@ -9,7 +9,6 @@ export interface AlgoliaProviderConfig {
     indexSettings?: Partial<IndexSettings>;
     querySettings?: Partial<SearchParamsObject>;
     index?: boolean;
-    uploadDuringBuild?: boolean;
     api?: string;
 }
 

@@ -22,4 +22,9 @@ export const options = {
         desc: 'Algolia Index Name',
         env: 'ALGOLIA_INDEX_NAME',
     }),
+    index: option({
+        flags: '--index [boolean]',
+        desc: 'Whether to create and upload an index for search',
+        default: false,
+    }),
 };

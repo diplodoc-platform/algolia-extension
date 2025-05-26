@@ -84,7 +84,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             indexName,
             indexPrefix,
             index: true,
-            uploadDuringBuild: true,
         });
     }
 }
@@ -96,6 +95,7 @@ interface SearchConfig {
     searchKey?: string;
     indexPrefix?: string;
     provider?: string;
+    index?: boolean;
 }
 
 interface ExtensionConfig extends BaseConfig {
@@ -132,7 +132,7 @@ export class Extension implements IExtension {
     }
 
     private createAlgoliaProvider(run: BuildRun, config: SearchConfig): AlgoliaProvider {
-        const indexName = get(config, 'indexName', 'docs-{lang}');
+        const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs-{lang}');
         const indexPrefix = indexName.replace('-{lang}', '');
 
         return new AlgoliaProvider(run, {
@@ -142,6 +142,7 @@ export class Extension implements IExtension {
             indexName,
             indexPrefix,
             api: API_LINK,
+            index: get(config, 'index', false),
         });
     }
 }
