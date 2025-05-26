@@ -1,6 +1,7 @@
-import { parentPort } from 'worker_threads';
-import { ProcessMessage, ResultMessage, ErrorMessage, AlgoliaRecord } from '../types';
-import { processDocument } from '../core/document-processor';
+import {parentPort} from 'worker_threads';
+
+import {AlgoliaRecord, ErrorMessage, ProcessMessage, ResultMessage} from '../types';
+import {processDocument} from '../core/document-processor';
 
 // Make sure parentPort exists
 if (!parentPort) {
@@ -10,7 +11,7 @@ if (!parentPort) {
 function sendResult(records: AlgoliaRecord[]): void {
     const resultMessage: ResultMessage = {
         type: 'result',
-        data: { records }
+        data: {records},
     };
     parentPort!.postMessage(resultMessage);
 }
@@ -20,8 +21,8 @@ function sendError(error: unknown): void {
         type: 'error',
         data: {
             message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined
-        }
+            stack: error instanceof Error ? error.stack : undefined,
+        },
     };
     parentPort!.postMessage(errorMessage);
 }
@@ -33,7 +34,7 @@ parentPort.on('message', (message: ProcessMessage): void => {
             throw new Error(`Unexpected message type: ${message.type}`);
         }
 
-        const { path, lang, html, title, meta } = message.data;
+        const {path, lang, html, title, meta} = message.data;
 
         // Skip pages marked as noIndex
         if (meta.noIndex) {
@@ -42,8 +43,8 @@ parentPort.on('message', (message: ProcessMessage): void => {
         }
 
         // Process HTML and create records for the index using the common processor
-        const records = processDocument({ path, lang, html, title, meta });
-        
+        const records = processDocument({path, lang, html, title, meta});
+
         // Send result back to the main thread
         sendResult(records);
     } catch (error) {

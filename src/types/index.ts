@@ -1,7 +1,4 @@
-import type {
-    IndexSettings,
-    SearchParamsObject,
-} from "algoliasearch";
+import type {IndexSettings, SearchParamsObject} from 'algoliasearch';
 
 export interface AlgoliaProviderConfig {
     appId: string;
@@ -83,7 +80,7 @@ export interface ErrorMessage extends WorkerMessage {
 export interface AlgoliaConfig {
     input: string;
     search: {
-        provider: "algolia";
+        provider: 'algolia';
         appId: string;
         apiKey: string;
         indexName: string;

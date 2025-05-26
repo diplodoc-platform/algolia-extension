@@ -1,18 +1,19 @@
-import { load } from 'cheerio';
-import { html2text } from '@diplodoc/search-extension/indexer';
-import { AlgoliaRecord, DocumentSection, DocumentProcessingContext } from '../types';
+import {load} from 'cheerio';
+import {html2text} from '@diplodoc/search-extension/indexer';
+
+import {AlgoliaRecord, DocumentProcessingContext, DocumentSection} from '../types';
 
 export function extractHeadings(html: string): string[] {
     const $ = load(html);
     const headings: string[] = [];
 
-    $("h1, h2, h3, h4, h5, h6").each((_, element) => {
+    $('h1, h2, h3, h4, h5, h6').each((_, element) => {
         const textPieces = $(element)
             .contents()
             .map((_, el) => $(el).text())
             .get();
 
-        const uniqueText = [...new Set(textPieces)].join("").trim();
+        const uniqueText = [...new Set(textPieces)].join('').trim();
 
         if (uniqueText) {
             headings.push(uniqueText);
@@ -25,7 +26,7 @@ export function extractHeadings(html: string): string[] {
 export function splitAndAddLargeRecord(
     record: AlgoliaRecord,
     acc: AlgoliaRecord[],
-    chunkSize: number = 4000
+    chunkSize = 4000,
 ): void {
     const baseObjectID = record.objectID;
     const content = record.content;
@@ -57,22 +58,22 @@ export function getRecordSize(record: AlgoliaRecord): number {
 }
 
 export function splitDocumentIntoSections(html: string): {
-    sections: DocumentSection[],
-    mainHeading: string
+    sections: DocumentSection[];
+    mainHeading: string;
 } {
     const $ = load(html);
     const sections: DocumentSection[] = [];
-    let currentSection: DocumentSection = { heading: "", content: "", anchor: "" };
+    let currentSection: DocumentSection = {heading: '', content: '', anchor: ''};
     let mainHeading = '';
 
-    $("body")
+    $('body')
         .children()
         .each((_, element) => {
             const $el = $(element);
 
-            if ($el.is("h1, h2, h3, h4, h5, h6")) {
+            if ($el.is('h1, h2, h3, h4, h5, h6')) {
                 if (currentSection.content.trim()) {
-                    sections.push({ ...currentSection });
+                    sections.push({...currentSection});
                 }
 
                 let headingText = '';
@@ -93,48 +94,48 @@ export function splitDocumentIntoSections(html: string): {
                 currentSection = {
                     heading: headingText,
                     anchor: $el.attr('id') || '',
-                    content: "",
+                    content: '',
                 };
             } else {
-                currentSection.content += $el.text().trim() + " ";
+                currentSection.content += $el.text().trim() + ' ';
             }
         });
 
     if (currentSection.content.trim()) {
-        sections.push({ ...currentSection });
+        sections.push({...currentSection});
     }
 
-    return { sections, mainHeading };
+    return {sections, mainHeading};
 }
 
 function createBaseRecord(
     path: string,
     lang: string,
     title: string,
-    keywords: string[] = []
+    keywords: string[] = [],
 ): Omit<AlgoliaRecord, 'objectID' | 'content' | 'headings' | 'anchor' | 'section'> {
     return {
         title,
         keywords,
-        url: path.replace(/\.\w+$/, "") + ".html",
+        url: path.replace(/\.\w+$/, '') + '.html',
         lang,
     };
 }
 
 export function processDocument(context: DocumentProcessingContext): AlgoliaRecord[] {
-    const { path, lang, html, title, meta } = context;
-    const { sections, mainHeading } = splitDocumentIntoSections(html);
+    const {path, lang, html, title, meta} = context;
+    const {sections, mainHeading} = splitDocumentIntoSections(html);
     const records: AlgoliaRecord[] = [];
-    const baseTitle = title || meta.title || mainHeading || "";
+    const baseTitle = title || meta.title || mainHeading || '';
     const baseKeywords = meta.keywords || [];
-    
+
     const MAX_RECORD_SIZE = 9600;
 
     if (sections.length === 0) {
         const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords);
         const record: AlgoliaRecord = {
             ...baseRecord,
-            objectID: path.replace(/\.\w+$/, ""),
+            objectID: path.replace(/\.\w+$/, ''),
             content: html2text(html).slice(0, 5000),
             headings: extractHeadings(html),
             anchor: '',
@@ -152,7 +153,7 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
         const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords);
         const record: AlgoliaRecord = {
             ...baseRecord,
-            objectID: `${path.replace(/\.\w+$/, "")}-${index}`,
+            objectID: `${path.replace(/\.\w+$/, '')}-${index}`,
             content: section.content.trim(),
             headings: [section.heading],
             anchor: section.anchor,
