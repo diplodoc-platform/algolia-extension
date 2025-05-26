@@ -1,6 +1,6 @@
 import {parentPort} from 'worker_threads';
 
-import {AlgoliaRecord, ErrorMessage, ProcessMessage, ResultMessage} from '../types';
+import {AlgoliaRecord, ErrorMessage, ProcessMessage, ResultMessage, WorkerMessage} from '../types';
 import {processDocument} from '../core/document-processor';
 
 if (!parentPort) {
@@ -30,22 +30,33 @@ function sendError(error: unknown): void {
     }
 }
 
-parentPort.on('message', (message: ProcessMessage): void => {
+process.on('uncaughtException', (error) => {
+    sendError(error);
+});
+
+process.on('unhandledRejection', (reason) => {
+    sendError(new Error(`Unhandled promise rejection: ${reason}`));
+});
+
+parentPort.on('message', (message: WorkerMessage): void => {
     try {
-        if (message.type !== 'process') {
-            throw new Error(`Unexpected message type: ${message.type}`);
-        }
-
-        const {path, lang, html, title, meta} = message.data;
-
-        if (meta.noIndex) {
-            sendResult([]);
+        if (message.type === 'terminate') {
+            process.exit(0);
             return;
         }
 
-        const records = processDocument({path, lang, html, title, meta});
+        if (message.type === 'process') {
+            const processMessage = message as ProcessMessage;
+            const {path, lang, html, title, meta} = processMessage.data;
 
-        sendResult(records);
+            if (meta.noIndex) {
+                sendResult([]);
+                return;
+            }
+
+            const records = processDocument({path, lang, html, title, meta});
+            sendResult(records);
+        }
     } catch (error) {
         sendError(error);
     }

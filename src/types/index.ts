@@ -44,7 +44,7 @@ export interface ProcessingResult {
     lang: string;
 }
 
-export type MessageType = 'process' | 'result' | 'error';
+export type MessageType = 'process' | 'result' | 'error' | 'terminate';
 
 export interface WorkerMessage {
     type: MessageType;
