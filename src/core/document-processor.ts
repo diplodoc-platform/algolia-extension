@@ -2,9 +2,6 @@ import { load } from 'cheerio';
 import { html2text } from '@diplodoc/search-extension/indexer';
 import { AlgoliaRecord, DocumentSection, DocumentProcessingContext } from '../types';
 
-/**
- * Extracts headings from HTML
- */
 export function extractHeadings(html: string): string[] {
     const $ = load(html);
     const headings: string[] = [];
@@ -28,16 +25,10 @@ export function extractHeadings(html: string): string[] {
     return headings;
 }
 
-/**
- * Splits a large record into smaller chunks and adds them to the records array
- * @param record Source record
- * @param acc Array for adding results
- * @param chunkSize Chunk size in characters (default 4000)
- */
 export function splitAndAddLargeRecord(
     record: AlgoliaRecord,
     acc: AlgoliaRecord[],
-    chunkSize = 4000
+    chunkSize: number = 4000
 ): void {
     const baseObjectID = record.objectID;
     const content = record.content;
@@ -64,9 +55,6 @@ export function splitAndAddLargeRecord(
     }
 }
 
-/**
- * Calculates record size according to Algolia specifications
- */
 export function getRecordSize(record: AlgoliaRecord): number {
     // Convert to JSON string with minimal spacing
     const jsonString = JSON.stringify(record);
@@ -74,10 +62,10 @@ export function getRecordSize(record: AlgoliaRecord): number {
     return Buffer.from(jsonString).length;
 }
 
-/**
- * Splits HTML document into sections by headings
- */
-export function splitDocumentIntoSections(html: string): { sections: DocumentSection[], mainHeading: string } {
+export function splitDocumentIntoSections(html: string): {
+    sections: DocumentSection[],
+    mainHeading: string
+} {
     const $ = load(html);
     const sections: DocumentSection[] = [];
     let currentSection: DocumentSection = { heading: "", content: "", anchor: "" };
@@ -130,9 +118,6 @@ export function splitDocumentIntoSections(html: string): { sections: DocumentSec
     return { sections, mainHeading };
 }
 
-/**
- * Creates a base record for the index
- */
 function createBaseRecord(
     path: string,
     lang: string,
@@ -147,9 +132,6 @@ function createBaseRecord(
     };
 }
 
-/**
- * Processes HTML document and creates records for the index
- */
 export function processDocument(context: DocumentProcessingContext): AlgoliaRecord[] {
     const { path, lang, html, title, meta } = context;
     const { sections, mainHeading } = splitDocumentIntoSections(html);

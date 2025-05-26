@@ -3,9 +3,6 @@ import type {
     SearchParamsObject,
 } from "algoliasearch";
 
-/**
- * Algolia provider configuration
- */
 export interface AlgoliaProviderConfig {
     appId: string;
     apiKey?: string;
@@ -19,9 +16,6 @@ export interface AlgoliaProviderConfig {
     api?: string;
 }
 
-/**
- * Algolia index record
- */
 export interface AlgoliaRecord {
     objectID: string;
     title: string;
@@ -34,18 +28,12 @@ export interface AlgoliaRecord {
     section?: string;
 }
 
-/**
- * Document section
- */
 export interface DocumentSection {
     heading: string;
     content: string;
     anchor?: string;
 }
 
-/**
- * Document metadata
- */
 export interface DocumentMeta {
     noIndex?: boolean;
     keywords?: string[];
@@ -54,30 +42,18 @@ export interface DocumentMeta {
     [key: string]: any;
 }
 
-/**
- * Document processing result
- */
 export interface ProcessingResult {
     records: AlgoliaRecord[];
     lang: string;
 }
 
-/**
- * Worker message types
- */
 export type MessageType = 'process' | 'result' | 'error';
 
-/**
- * Base worker message
- */
 export interface WorkerMessage {
     type: MessageType;
-    data: any;
+    data: unknown;
 }
 
-/**
- * Document processing message
- */
 export interface ProcessMessage extends WorkerMessage {
     type: 'process';
     data: {
@@ -89,9 +65,6 @@ export interface ProcessMessage extends WorkerMessage {
     };
 }
 
-/**
- * Processing result message
- */
 export interface ResultMessage extends WorkerMessage {
     type: 'result';
     data: {
@@ -99,9 +72,6 @@ export interface ResultMessage extends WorkerMessage {
     };
 }
 
-/**
- * Error message
- */
 export interface ErrorMessage extends WorkerMessage {
     type: 'error';
     data: {
@@ -110,9 +80,6 @@ export interface ErrorMessage extends WorkerMessage {
     };
 }
 
-/**
- * Extended Algolia configuration
- */
 export interface AlgoliaConfig {
     input: string;
     search: {
@@ -123,9 +90,6 @@ export interface AlgoliaConfig {
     };
 }
 
-/**
- * Document processing context
- */
 export interface DocumentProcessingContext {
     path: string;
     lang: string;

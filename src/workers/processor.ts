@@ -7,9 +7,6 @@ if (!parentPort) {
     throw new Error('This file should be run as a worker thread');
 }
 
-/**
- * Sends processing result to the main thread
- */
 function sendResult(records: AlgoliaRecord[]): void {
     const resultMessage: ResultMessage = {
         type: 'result',
@@ -18,9 +15,6 @@ function sendResult(records: AlgoliaRecord[]): void {
     parentPort!.postMessage(resultMessage);
 }
 
-/**
- * Sends error message to the main thread
- */
 function sendError(error: unknown): void {
     const errorMessage: ErrorMessage = {
         type: 'error',
@@ -32,8 +26,8 @@ function sendError(error: unknown): void {
     parentPort!.postMessage(errorMessage);
 }
 
-// Message handler from the main thread
-parentPort.on('message', (message: ProcessMessage) => {
+// Message handler for processing requests from the main thread
+parentPort.on('message', (message: ProcessMessage): void => {
     try {
         if (message.type !== 'process') {
             throw new Error(`Unexpected message type: ${message.type}`);

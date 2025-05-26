@@ -122,9 +122,6 @@ export class AlgoliaProvider implements SearchProvider {
         }
     }
 
-    /**
-     * Synchronous document processing (used as a fallback)
-     */
     private processDocumentSync(
         path: string,
         lang: string,
@@ -143,13 +140,6 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
 
-    /**
-     * Updates index settings and uploads records to Algolia
-     * @param indexName Index name
-     * @param lang Language
-     * @param records Records to upload
-     * @param method Upload method ('replaceAllObjects' or 'saveObjects')
-     */
     private async uploadRecordsToAlgolia(
         indexName: string,
         lang: string,
@@ -317,7 +307,7 @@ export class AlgoliaProvider implements SearchProvider {
         }
     }
 
-    config(lang: string) {
+    config(lang: string): Record<string, any> {
         return {
             provider: "algolia",
             api: this.apiLink,
@@ -339,8 +329,7 @@ export class AlgoliaProvider implements SearchProvider {
     }
 }
 
-// Helper functions
-function getBaseLang(lang: string) {
+function getBaseLang(lang: string): string {
     if (["ru", "be", "kz", "ua"].includes(lang)) {
         return "ru";
     }
@@ -348,6 +337,6 @@ function getBaseLang(lang: string) {
     return "en";
 }
 
-function pageLink(lang: string) {
+function pageLink(lang: string): string {
     return join("_search", lang, `index.html`);
 }

@@ -33,9 +33,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
     protected readonly modules = [];
 
-    /**
-     * Validates and returns Algolia configuration
-     */
     private validateAndGetConfig(args: BaseArgs): {
         appId: string;
         apiKey: string;
@@ -66,9 +63,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
         return { appId, apiKey, indexName, projectName };
     }
 
-    /**
-     * Creates and configures Algolia provider
-     */
     private createProvider(config: {
         appId: string;
         apiKey: string;
@@ -94,9 +88,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
         );
     }
 
-    /**
-     * Main action method
-     */
     async action(args: BaseArgs) {
         // Get and validate configuration
         const config = this.validateAndGetConfig(args);
@@ -126,20 +117,14 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
 // Extension class implementing IExtension interface
 export class Extension implements IExtension {
-    /**
-     * Adds AlgoliaProgram module to the main program
-     */
-    private addAlgoliaModule(program: BaseProgram): void {
+    private addAlgoliaModule(program: BaseProgram<any>): void {
         if (BaseProgram.is(program) && program.name === "Program") {
-            console.log("Adding AlgoliaProgram to Program");
+            program.logger?.info("Adding AlgoliaProgram to Program");
             program.addModule(new AlgoliaProgram());
         }
     }
 
-    /**
-     * Registers hooks for integration with build system
-     */
-    private registerBuildHooks(program: BaseProgram): void {
+    private registerBuildHooks(program: BaseProgram<any>): void {
         getBuildHooks(program)
             .BeforeRun.for("html")
             .tap("AlgoliaSearch", (run) => {
@@ -147,10 +132,7 @@ export class Extension implements IExtension {
             });
     }
 
-    /**
-     * Registers hooks for search
-     */
-    private registerSearchHooks(run: any): void {
+    private registerSearchHooks(run: BuildRun): void {
         getSearchHooks(run.search)
             .Provider.for("algolia")
             .tap("AlgoliaSearch", (_connector, config) => {
@@ -158,10 +140,7 @@ export class Extension implements IExtension {
             });
     }
 
-    /**
-     * Creates Algolia provider for hooks
-     */
-    private createAlgoliaProvider(run: any, config: any): AlgoliaProvider {
+    private createAlgoliaProvider(run: BuildRun, config: Record<string, any>): AlgoliaProvider {
         const projectName = get(
             config,
             "docs-viewer.project-name", "",
@@ -181,10 +160,7 @@ export class Extension implements IExtension {
         });
     }
 
-    /**
-     * Applies extension to the program
-     */
-    apply(program: BaseProgram) {
+    apply(program: BaseProgram<any>): void {
         // Add AlgoliaProgram module to the main program
         this.addAlgoliaModule(program);
 
