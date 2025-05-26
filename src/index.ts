@@ -75,14 +75,11 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     }): AlgoliaProvider {
         const {appId, apiKey, indexName} = config;
 
-        const indexPrefix = indexName.replace('-{lang}', '');
-
         return new AlgoliaProvider(new BuildRun({...this.config, output: this.config.input}), {
             appId,
             apiKey,
             searchKey: 'search-api-key',
             indexName,
-            indexPrefix,
             index: true,
         });
     }
@@ -133,15 +130,13 @@ export class Extension implements IExtension {
 
     private createAlgoliaProvider(run: BuildRun, config: SearchConfig): AlgoliaProvider {
         const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs-{lang}');
-        const indexPrefix = indexName.replace('-{lang}', '');
 
         return new AlgoliaProvider(run, {
             appId: process.env.ALGOLIA_APP_ID || get(config, 'appId', ''),
             apiKey: process.env.ALGOLIA_API_KEY || get(config, 'apiKey'),
-            searchKey: get(config, 'searchKey', 'search-api-key'),
+            searchKey: process.env.ALGOLIA_SEARCH_KEY || get(config, 'searchKey', 'search-api-key'),
             indexName,
-            indexPrefix,
-            api: API_LINK,
+            api: process.env.ALGOLIA_API_PATH || get(config, 'api', API_LINK),
             index: get(config, 'index', false),
         });
     }

@@ -14,9 +14,10 @@ import {AlgoliaWorkerPool} from '../workers';
 
 import {processDocument} from './document-processor';
 import {
+    ALGOLIA_METHODS,
+    AlgoliaMethod,
     DEFAULT_INDEX_SETTINGS,
     IndexLogger,
-    createIndexName,
     ensureClient,
     getBaseLang,
     pageLink,
@@ -28,7 +29,7 @@ export class AlgoliaProvider implements SearchProvider {
     private appId: string;
     private apiKey?: string;
     private searchKey: string;
-    private indexPrefix: string;
+    private indexName: string;
     private indexSettings: Partial<IndexSettings>;
     private querySettings: Partial<SearchParamsObject>;
     private objects: Record<string, AlgoliaRecord[]> = {};
@@ -47,17 +48,15 @@ export class AlgoliaProvider implements SearchProvider {
         }
         this.appId = config.appId;
 
-        if (!config.indexName && !config.indexPrefix) {
-            this.logger.warn('Index name (indexName) is not specified. Using default value "docs"');
+        if (!config.indexName) {
+            this.logger.warn(
+                'Index name (indexName) is not specified. Using default value "docs-{lang}"',
+            );
         }
 
-        this.indexPrefix =
-            config.indexPrefix ||
-            (config.indexName && config.indexName.includes('-{lang}')
-                ? config.indexName.replace('-{lang}', '')
-                : config.indexName || 'docs');
+        this.indexName = config.indexName || 'docs-{lang}';
 
-        this.logger.info(`Using index prefix: ${this.indexPrefix}`);
+        this.logger.info(`Using index name: ${this.indexName}`);
 
         this.apiKey = config.apiKey;
         this.searchKey = config.searchKey || 'search-api-key';
@@ -127,9 +126,13 @@ export class AlgoliaProvider implements SearchProvider {
             const content = await this.run.read(filePath);
             const records = JSON.parse(content) as AlgoliaRecord[];
 
-            const indexName = createIndexName(this.indexPrefix, lang);
-
-            await this.uploadRecordsToAlgolia(indexName, lang, records, 'replaceAllObjects');
+            const indexName = this.createIndexName(lang);
+            await this.uploadRecordsToAlgolia(
+                indexName,
+                lang,
+                records,
+                ALGOLIA_METHODS.REPLACE_ALL_OBJECTS,
+            );
         }
     }
 
@@ -140,7 +143,7 @@ export class AlgoliaProvider implements SearchProvider {
 
         const client = this.ensureClient();
         for (const lang of Object.keys(this.objects)) {
-            const indexName = createIndexName(this.indexPrefix, lang);
+            const indexName = this.createIndexName(lang);
             await client.clearObjects({indexName});
         }
     }
@@ -152,7 +155,7 @@ export class AlgoliaProvider implements SearchProvider {
 
         const client = this.ensureClient();
         for (const lang of Object.keys(this.objects)) {
-            const indexName = createIndexName(this.indexPrefix, lang);
+            const indexName = this.createIndexName(lang);
             const baseLang = getBaseLang(lang);
 
             await client.setSettings({
@@ -200,8 +203,13 @@ export class AlgoliaProvider implements SearchProvider {
                 continue;
             }
 
-            const indexName = createIndexName(this.indexPrefix, lang);
-            await this.uploadRecordsToAlgolia(indexName, lang, this.objects[lang], 'saveObjects');
+            const indexName = this.createIndexName(lang);
+            await this.uploadRecordsToAlgolia(
+                indexName,
+                lang,
+                this.objects[lang],
+                ALGOLIA_METHODS.SAVE_OBJECTS,
+            );
         }
     }
 
@@ -211,10 +219,14 @@ export class AlgoliaProvider implements SearchProvider {
             api: this.apiLink,
             link: pageLink(lang),
             appId: this.appId,
-            indexName: createIndexName(this.indexPrefix, lang),
+            indexName: this.createIndexName(lang),
             searchKey: this.searchKey,
             querySettings: this.querySettings,
         };
+    }
+
+    private createIndexName(lang: string): string {
+        return `${this.indexName}-${lang}`;
     }
 
     private ensureClient(): Algoliasearch {
@@ -239,7 +251,7 @@ export class AlgoliaProvider implements SearchProvider {
         indexName: string,
         lang: string,
         records: AlgoliaRecord[],
-        method: 'replaceAllObjects' | 'saveObjects' = 'replaceAllObjects',
+        method: AlgoliaMethod = ALGOLIA_METHODS.REPLACE_ALL_OBJECTS,
     ): Promise<void> {
         const client = ensureClient(this.client);
         await uploadRecordsToAlgolia(

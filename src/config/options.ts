@@ -27,4 +27,22 @@ export const options = {
         desc: 'Whether to create and upload an index for search',
         default: false,
     }),
+    searchKey: option({
+        flags: '--search-key <key>',
+        desc: 'Client-side API key for search',
+        env: 'ALGOLIA_SEARCH_KEY',
+        default: 'search-api-key',
+    }),
+    provider: option({
+        flags: '--search-provider <name>',
+        desc: 'Search provider name',
+        env: 'ALGOLIA_PROVIDER',
+        default: 'algolia',
+    }),
+    api: option({
+        flags: '--search-api <path>',
+        desc: 'Path to the client-side search API',
+        env: 'ALGOLIA_API_PATH',
+        default: '_search/api.js',
+    }),
 };

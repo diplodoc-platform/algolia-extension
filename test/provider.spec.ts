@@ -18,7 +18,6 @@ jest.mock('../src/core/utils', () => {
         })),
         getBaseLang: jest.fn((lang) => (lang === 'ru' ? 'ru' : 'en')),
         pageLink: jest.fn((lang) => join('_search', lang, 'index.html')),
-        createIndexName: jest.fn((prefix, lang) => `${prefix}-${lang}`),
         uploadRecordsToAlgolia: jest
             .fn()
             .mockImplementation(async (client, indexName, _lang, records, method) => {
@@ -95,8 +94,7 @@ describe('AlgoliaProvider', () => {
             appId: 'test-app-id',
             apiKey: 'test-api-key',
             searchKey: 'test-search-key',
-            indexName: 'test-index-{lang}',
-            indexPrefix: 'test-index',
+            indexName: 'test-index',
             index: true,
         };
 

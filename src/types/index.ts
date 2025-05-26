@@ -5,7 +5,6 @@ export interface AlgoliaProviderConfig {
     apiKey?: string;
     searchKey: string;
     indexName: string;
-    indexPrefix?: string;
     indexSettings?: Partial<IndexSettings>;
     querySettings?: Partial<SearchParamsObject>;
     index?: boolean;
