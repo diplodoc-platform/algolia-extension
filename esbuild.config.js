@@ -1,6 +1,8 @@
+/* eslint-env node */
+/* eslint-disable no-console */
+
 const {build} = require('esbuild');
 const {copyFile, mkdir} = require('fs/promises');
-const {join} = require('path');
 
 const isDev = process.env.NODE_ENV === 'development';
 

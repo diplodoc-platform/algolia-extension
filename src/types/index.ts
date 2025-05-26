@@ -36,7 +36,7 @@ export interface DocumentMeta {
     keywords?: string[];
     title?: string;
     description?: string;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 export interface ProcessingResult {

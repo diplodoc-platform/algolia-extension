@@ -4,6 +4,8 @@ import {uniq} from 'lodash';
 import {LogLevel, Logger} from '@diplodoc/cli/lib/logger';
 import {join} from 'path';
 
+import {AlgoliaRecord} from '../types';
+
 export class IndexLogger extends Logger {
     index = this.topic(LogLevel.INFO, 'INDEX');
 }
@@ -28,7 +30,7 @@ export async function uploadRecordsToAlgolia(
     client: Algoliasearch,
     indexName: string,
     lang: string,
-    records: any[],
+    records: AlgoliaRecord[],
     method: 'replaceAllObjects' | 'saveObjects',
     defaultSettings: Partial<IndexSettings>,
     indexSettings: Partial<IndexSettings>,
@@ -53,10 +55,10 @@ export async function uploadRecordsToAlgolia(
             objects: records as unknown as Record<string, unknown>[],
         });
 
-        if (response && (response as any).taskID) {
+        if (response && 'taskID' in response && typeof response.taskID === 'number') {
             await client.waitForTask({
                 indexName,
-                taskID: (response as any).taskID,
+                taskID: response.taskID,
             });
         } else {
             logger.warn(

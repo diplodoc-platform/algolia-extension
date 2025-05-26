@@ -13,7 +13,9 @@ function sendResult(records: AlgoliaRecord[]): void {
         type: 'result',
         data: {records},
     };
-    parentPort!.postMessage(resultMessage);
+    if (parentPort) {
+        parentPort.postMessage(resultMessage);
+    }
 }
 
 function sendError(error: unknown): void {
@@ -24,7 +26,9 @@ function sendError(error: unknown): void {
             stack: error instanceof Error ? error.stack : undefined,
         },
     };
-    parentPort!.postMessage(errorMessage);
+    if (parentPort) {
+        parentPort.postMessage(errorMessage);
+    }
 }
 
 // Message handler for processing requests from the main thread

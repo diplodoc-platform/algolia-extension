@@ -1,15 +1,22 @@
-import {Worker} from 'worker_threads';
+import {Worker as NodeWorker} from 'worker_threads';
 import {join} from 'path';
 import {LogLevel, Logger} from '@diplodoc/cli/lib/logger';
 
-import {AlgoliaRecord, ErrorMessage, ProcessMessage, ResultMessage, WorkerMessage} from '../types';
+import {
+    AlgoliaRecord,
+    DocumentMeta,
+    ErrorMessage,
+    ProcessMessage,
+    ResultMessage,
+    WorkerMessage,
+} from '../types';
 
 class WorkerPoolLogger extends Logger {
     worker = this.topic(LogLevel.INFO, 'WORKER_POOL');
 }
 
 export class AlgoliaWorkerPool {
-    private workers: Worker[] = [];
+    private workers: NodeWorker[] = [];
     private queue: ProcessMessage[] = [];
     private processing = false;
     private readonly maxWorkers: number;
@@ -36,8 +43,49 @@ export class AlgoliaWorkerPool {
         }
     }
 
-    private createWorker(): Worker {
-        const worker = new Worker(this.workerPath);
+    initialize(): void {
+        for (let i = 0; i < this.maxWorkers; i++) {
+            const worker = this.createWorker();
+            this.workers.push(worker);
+        }
+    }
+
+    addTask(path: string, lang: string, html: string, title: string, meta: DocumentMeta): void {
+        const message: ProcessMessage = {
+            type: 'process',
+            data: {
+                path,
+                lang,
+                html,
+                title,
+                meta: meta || {},
+            },
+        };
+
+        this.queue.push(message);
+
+        if (!this.processing) {
+            this.startProcessing();
+        }
+    }
+
+    async waitForCompletion(): Promise<Map<string, AlgoliaRecord[]>> {
+        if (this.queue.length === 0 && !this.processing) {
+            return this.results;
+        }
+
+        return new Promise<Map<string, AlgoliaRecord[]>>((resolve) => {
+            this.resolvePromise = resolve;
+        });
+    }
+
+    async terminate(): Promise<void> {
+        await Promise.all(this.workers.map((worker) => worker.terminate()));
+        this.workers = [];
+    }
+
+    private createWorker(): NodeWorker {
+        const worker = new NodeWorker(this.workerPath);
 
         worker.on('message', (message: WorkerMessage) => {
             this.handleWorkerMessage(worker, message);
@@ -58,16 +106,9 @@ export class AlgoliaWorkerPool {
         return worker;
     }
 
-    initialize(): void {
-        for (let i = 0; i < this.maxWorkers; i++) {
-            const worker = this.createWorker();
-            this.workers.push(worker);
-        }
-    }
-
-    private handleWorkerMessage(worker: Worker, message: WorkerMessage): void {
+    private handleWorkerMessage(worker: NodeWorker, message: WorkerMessage): void {
         switch (message.type) {
-            case 'result':
+            case 'result': {
                 const resultMessage = message as ResultMessage;
                 const records = resultMessage.data.records;
 
@@ -76,18 +117,23 @@ export class AlgoliaWorkerPool {
                     if (!this.results.has(lang)) {
                         this.results.set(lang, []);
                     }
-                    this.results.get(lang)!.push(record);
+                    const resultsForLang = this.results.get(lang);
+                    if (resultsForLang) {
+                        resultsForLang.push(record);
+                    }
                 }
 
                 this.processNextItem(worker);
                 break;
+            }
 
-            case 'error':
+            case 'error': {
                 const errorMessage = message as ErrorMessage;
                 this.logger.error(`Processing error:`, errorMessage.data.message);
 
                 this.processNextItem(worker);
                 break;
+            }
 
             default:
                 this.logger.warn(`Unknown message type: ${message.type}`);
@@ -97,7 +143,7 @@ export class AlgoliaWorkerPool {
         this.checkCompletion();
     }
 
-    private replaceWorker(oldWorker: Worker): void {
+    private replaceWorker(oldWorker: NodeWorker): void {
         const index = this.workers.indexOf(oldWorker);
         if (index !== -1) {
             this.workers.splice(index, 1);
@@ -109,28 +155,12 @@ export class AlgoliaWorkerPool {
         }
     }
 
-    addTask(
-        path: string,
-        lang: string,
-        html: string,
-        title: string,
-        meta: Record<string, any>,
-    ): void {
-        const message: ProcessMessage = {
-            type: 'process',
-            data: {
-                path,
-                lang,
-                html,
-                title,
-                meta: meta || {},
-            },
-        };
-
-        this.queue.push(message);
-
-        if (!this.processing) {
-            this.startProcessing();
+    private processNextItem(worker: NodeWorker): void {
+        if (this.queue.length > 0) {
+            const task = this.queue.shift();
+            if (task) {
+                worker.postMessage(task);
+            }
         }
     }
 
@@ -146,33 +176,11 @@ export class AlgoliaWorkerPool {
         }
     }
 
-    private processNextItem(worker: Worker): void {
-        if (this.queue.length > 0) {
-            const task = this.queue.shift()!;
-            worker.postMessage(task);
-        }
-    }
-
     private checkCompletion(): void {
         if (this.queue.length === 0 && this.resolvePromise) {
             this.processing = false;
             this.resolvePromise(this.results);
             this.resolvePromise = null;
         }
-    }
-
-    async waitForCompletion(): Promise<Map<string, AlgoliaRecord[]>> {
-        if (this.queue.length === 0 && !this.processing) {
-            return this.results;
-        }
-
-        return new Promise<Map<string, AlgoliaRecord[]>>((resolve) => {
-            this.resolvePromise = resolve;
-        });
-    }
-
-    async terminate(): Promise<void> {
-        await Promise.all(this.workers.map((worker) => worker.terminate()));
-        this.workers = [];
     }
 }
