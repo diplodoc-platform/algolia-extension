@@ -73,7 +73,6 @@ export class AlgoliaWorkerPool {
 
     async terminate(): Promise<void> {
         try {
-            // Отправляем сигнал о завершении работы всем воркерам
             this.workers.forEach((worker) => {
                 try {
                     worker.postMessage({type: 'terminate', data: null});
@@ -82,10 +81,8 @@ export class AlgoliaWorkerPool {
                 }
             });
 
-            // Даем воркерам время на корректное завершение
             await new Promise((resolve) => setTimeout(resolve, 100));
 
-            // Завершаем работу воркеров
             await Promise.all(this.workers.map((worker) => worker.terminate()));
 
             this.workers = [];
