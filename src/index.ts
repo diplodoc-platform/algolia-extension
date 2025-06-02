@@ -1,8 +1,9 @@
 import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
 import {BaseArgs, BaseProgram, withConfigDefaults} from '@diplodoc/cli/lib/program';
-import {BuildRun, getBuildHooks, getSearchHooks} from '@diplodoc/cli';
+import {getBuildHooks, getSearchHooks} from '@diplodoc/cli';
 import {Command, ExtendedOption} from '@diplodoc/cli/lib/config';
+import {Run} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
 
 import {AlgoliaProvider} from './core/provider';
@@ -30,15 +31,20 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
     protected readonly modules = [];
 
+    private run!: Run;
+
     async action(args: BaseArgs) {
         const config = this.validateAndGetConfig(args);
 
         this.logger.info('Starting Algolia indexing...', config.indexName);
 
+        this.run = new Run({...this.config, output: this.config.input});
+
         const provider = this.createProvider(config);
 
         try {
             await provider.addObjects();
+            this.logger.info('Algolia indexing completed successfully');
         } catch (error) {
             this.logger.error('Failed to upload index objects to Algolia:', error);
             throw error;
@@ -75,7 +81,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     }): AlgoliaProvider {
         const {appId, apiKey, indexName} = config;
 
-        return new AlgoliaProvider(new BuildRun({...this.config, output: this.config.input}), {
+        return new AlgoliaProvider(this.run, {
             appId,
             apiKey,
             searchKey: 'search-api-key',
@@ -116,19 +122,15 @@ export class Extension implements IExtension {
         getBuildHooks(program)
             .BeforeRun.for('html')
             .tap('AlgoliaSearch', (run) => {
-                this.registerSearchHooks(run);
+                getSearchHooks<ExtensionConfig['search']>(run?.search)
+                    .Provider.for('algolia')
+                    .tap('AlgoliaSearch', (_connector, config) => {
+                        return this.createAlgoliaProvider(run, config);
+                    });
             });
     }
 
-    private registerSearchHooks(run: BuildRun): void {
-        getSearchHooks(run.search)
-            .Provider.for('algolia')
-            .tap('AlgoliaSearch', (_connector, config) => {
-                return this.createAlgoliaProvider(run, config);
-            });
-    }
-
-    private createAlgoliaProvider(run: BuildRun, config: SearchConfig): AlgoliaProvider {
+    private createAlgoliaProvider(run: Run, config: SearchConfig): AlgoliaProvider {
         const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs');
 
         return new AlgoliaProvider(run, {
