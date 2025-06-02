@@ -2,8 +2,8 @@ import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
 import {BaseArgs, BaseProgram, withConfigDefaults} from '@diplodoc/cli/lib/program';
 import {getBuildHooks, getSearchHooks} from '@diplodoc/cli';
-import {Command, ExtendedOption} from '@diplodoc/cli/lib/config';
-import {Run} from '@diplodoc/cli/lib/run';
+import {Command, Config, ExtendedOption} from '@diplodoc/cli/lib/config';
+import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
 
 import {AlgoliaProvider} from './core/provider';
@@ -11,6 +11,14 @@ import {options} from './config';
 import {AlgoliaConfig} from './types';
 
 const API_LINK = '_search/api.js';
+
+class AlgoliaRun extends BaseRun {
+    constructor(config: Config<BaseConfig>) {
+        super(config);
+
+        this.scopes.set('input', config.input);
+    }
+}
 
 @withConfigDefaults(() => ({
     search: {
@@ -31,14 +39,14 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
 
     protected readonly modules = [];
 
-    private run!: Run;
+    private run!: AlgoliaRun;
 
     async action(args: BaseArgs) {
         const config = this.validateAndGetConfig(args);
 
         this.logger.info('Starting Algolia indexing...', config.indexName);
 
-        this.run = new Run({...this.config, output: this.config.input});
+        this.run = new AlgoliaRun(this.config);
 
         const provider = this.createProvider(config);
 
@@ -130,7 +138,7 @@ export class Extension implements IExtension {
             });
     }
 
-    private createAlgoliaProvider(run: Run, config: SearchConfig): AlgoliaProvider {
+    private createAlgoliaProvider(run: AlgoliaRun, config: SearchConfig): AlgoliaProvider {
         const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs');
 
         return new AlgoliaProvider(run, {
