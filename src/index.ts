@@ -1,7 +1,7 @@
 import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
 import {BaseArgs, BaseProgram, withConfigDefaults} from '@diplodoc/cli/lib/program';
-import {getBuildHooks, getSearchHooks} from '@diplodoc/cli';
+import {getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
 import {Command, Config, ExtendedOption} from '@diplodoc/cli/lib/config';
 import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
@@ -133,7 +133,19 @@ export class Extension implements IExtension {
                 getSearchHooks<ExtensionConfig['search']>(run?.search)
                     .Provider.for('algolia')
                     .tap('AlgoliaSearch', (_connector, config) => {
-                        return this.createAlgoliaProvider(run, config);
+                        const provider = this.createAlgoliaProvider(run, config);
+
+                        getEntryHooks(run.entry).State.tap('AlgoliaSearch', (state) => {
+                            state.search = provider.config(state.lang);
+                        });
+
+                        getEntryHooks(run.entry).Page.tap('AlgoliaSearch', (template) => {
+                            template.addScript(provider.config(template.lang).api, {
+                                position: 'state',
+                            });
+                        });
+
+                        return provider;
                     });
             });
     }
