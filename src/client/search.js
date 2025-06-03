@@ -5,7 +5,6 @@
 /* eslint-disable new-cap */
 /* eslint-env worker */
 
-// Default configuration
 const DEFAULT_CONFIG = {
     tolerance: 3,
     confidence: 0.5,
@@ -13,105 +12,187 @@ const DEFAULT_CONFIG = {
     base: '',
 };
 
-// Number of words for trimming results
 const TRIM_WORDS = 10;
 
-// Global self object in worker context
-// Default type of `self` is `WorkerGlobalScope & typeof globalThis`
-// https://github.com/microsoft/TypeScript/issues/14877
-const NOT_INITIALIZED = {
+const UNKNOWN_HANDLER = {
+    message: 'Unknown message type!',
+    code: 'UNKNOWN_HANDLER',
+};
+const NOT_INITIALIZED_CONFIG = {
     message: 'Worker is not initialized with required config!',
     code: 'NOT_INITIALIZED',
 };
+const NOT_INITIALIZED_API = {
+    message: 'Worker is not initialized with required api!',
+    code: 'NOT_INITIALIZED',
+};
 
-// Configuration validation
 function AssertConfig(config) {
     if (!config) {
-        throw NOT_INITIALIZED;
+        throw NOT_INITIALIZED_CONFIG;
     }
 }
 
-// Worker configuration
-let config = null;
+function AssertApi(api) {
+    if (!api) {
+        throw NOT_INITIALIZED_API;
+    }
+}
 
-// Worker API
 self.api = {
-    // Worker initialization
     async init() {
-        config = {
-            ...DEFAULT_CONFIG,
-            ...self.config,
-        };
+        self.config = Object.assign({}, DEFAULT_CONFIG, self.config);
     },
-
-    async suggest(query) {
-        AssertConfig(config);
-
-        const results = await search(config, query);
-
-        return format(config, results);
+    async suggest(query, count = 10) {
+        AssertConfig(self.config);
+        const results = await search(self.config, query, count);
+        const formattedResults = format(self.config, results);
+        return formattedResults;
     },
-
-    async search(query) {
-        AssertConfig(config);
-
-        const result = await search(config, query);
-
-        return format(config, result);
+    async search(query, count = 10, page = 1) {
+        AssertConfig(self.config);
+        const result = await search(self.config, query, count, page);
+        const formattedResults = format(self.config, result);
+        return formattedResults;
     },
 };
 
-async function search(config, query) {
-    const {appId, searchKey, indexName, querySettings, mark} = config;
+async function search(config, query, count = 10, page = 1) {
+    const appId = config.appId;
+    const searchKey = config.searchKey;
+    const indexName = config.indexName;
+    const querySettings = config.querySettings;
 
-    const response = await fetch(`https://${appId}.algolia.net/1/indexes/${indexName}/query`, {
+    if (!appId || !searchKey || !indexName) {
+        throw new Error(
+            'Algolia configuration is incomplete. Missing appId, searchKey or indexName.',
+        );
+    }
+
+    const url = `https://${appId}.algolia.net/1/indexes/${indexName}/query`;
+
+    const markClass = config.mark || 'search-highlight';
+    const requestBody = Object.assign({}, querySettings, {
+        query: query,
+        hitsPerPage: count,
+        page: page - 1,
+        attributesToSnippet: [`content:${TRIM_WORDS}`],
+        highlightPreTag: `<span class="${markClass}">`,
+        highlightPostTag: `</span>`,
+    });
+
+    const response = await fetch(url, {
         method: 'POST',
         headers: {
             'x-algolia-application-id': appId,
             'x-algolia-api-key': searchKey,
         },
-        body: JSON.stringify({
-            ...querySettings,
-            query,
-            attributesToSnippet: [`content:${TRIM_WORDS}`],
-            highlightPreTag: `<span class="${mark}">`,
-            highlightPostTag: `</span>`,
-        }),
+        body: JSON.stringify(requestBody),
     });
 
-    return response.json();
+    const data = await response.json();
+    return data;
 }
 
-// Format search results
 function format(config, result) {
-    const {base} = config;
+    const base = config.base || '';
 
-    return result.hits.map(({url, title, section, anchor, _highlightResult, _snippetResult}) => {
+    if (!result.hits) {
+        return [];
+    }
+
+    return result.hits.map(function (hit) {
+        const url = hit.url;
+        const title = hit.title;
+        const section = hit.section;
+        const anchor = hit.anchor;
+        const highlightResult = hit._highlightResult;
+        const snippetResult = hit._snippetResult;
+
         const link = anchor
-            ? `${base.replace(/\/?$/, '')}/${url}#${anchor}`
-            : `${base.replace(/\/?$/, '')}/${url}`;
+            ? base.replace(/\/?$/, '') + '/' + url + '#' + anchor
+            : base.replace(/\/?$/, '') + '/' + url;
+
+        const highlightedContent =
+            highlightResult && highlightResult.content && highlightResult.content.value;
+        const description =
+            (snippetResult && snippetResult.content && snippetResult.content.value) ||
+            (highlightedContent ? trim(highlightedContent, TRIM_WORDS) : '');
 
         return {
             type: 'page',
-            link,
-            title: _highlightResult?.title?.value || title,
+            link: link,
+            title:
+                (highlightResult && highlightResult.title && highlightResult.title.value) || title,
             section: section,
-            description:
-                _snippetResult?.content?.value ||
-                trim(_highlightResult?.content?.value, TRIM_WORDS),
+            description: description,
         };
     });
 }
 
-// Trim text to a specific number of words
 function trim(text, words) {
     if (!text) return '';
-
     const parts = text.split(/\s/);
-
     if (parts.length > words) {
         return parts.slice(0, words).join(' ') + '...';
     } else {
         return parts.join(' ');
     }
 }
+
+const HANDLERS = {
+    async init(config) {
+        self.config = config;
+        if (self.api && self.api.init) {
+            return self.api.init();
+        }
+        return;
+    },
+    async suggest(data) {
+        const {query, count = 10} = data;
+        AssertConfig(self.config);
+        AssertApi(self.api);
+        return self.api.suggest(query, count);
+    },
+    async search(data) {
+        const {query, count = 10, page = 1} = data;
+        AssertConfig(self.config);
+        AssertApi(self.api);
+        return self.api.search(query, count, page);
+    },
+};
+
+self.onmessage = async function (message) {
+    // Получаем порт из сообщения
+    const port = message.ports && message.ports.length ? message.ports[0] : null;
+    const type = message.data.type;
+    const handler = HANDLERS[type];
+
+    // Если обработчик не найден
+    if (!handler) {
+        if (port) {
+            port.postMessage({error: UNKNOWN_HANDLER});
+        } else {
+            self.postMessage({error: UNKNOWN_HANDLER});
+        }
+        return;
+    }
+
+    try {
+        const result = await handler(message.data);
+
+        // Отправляем результат через порт, если он есть
+        if (port) {
+            port.postMessage({result});
+        } else {
+            self.postMessage({result});
+        }
+    } catch (error) {
+        // Отправляем ошибку через порт, если он есть
+        if (port) {
+            port.postMessage({error});
+        } else {
+            self.postMessage({error});
+        }
+    }
+};
