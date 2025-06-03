@@ -4,6 +4,9 @@
   "description": "Algolia search integration extension for Diplodoc",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build:es": "node esbuild.config.js",
     "build": "tsc",
