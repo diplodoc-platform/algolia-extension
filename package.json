@@ -11,7 +11,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && cp src/client/search.js dist/src/client/search.js",
+    "build": "tsc && cp src/client/search.js dist/client/search.js",
     "build:types": "tsc --emitDeclarationOnly",
     "build:all": "npm run build && npm run build:types",
     "lint": "lint update && lint",
