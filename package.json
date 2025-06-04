@@ -7,6 +7,9 @@
   "publishConfig": {
     "access": "public"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc && cp src/client/search.js dist/src/client/search.js",
     "build:types": "tsc --emitDeclarationOnly",
@@ -39,8 +42,5 @@
     "prettier": "^3.0.0",
     "ts-jest": "^29.1.0",
     "typescript": "^5.0.0"
-  },
-  "peerDependencies": {
-    "@diplodoc/cli": "^5.0.0-rc-25"
   }
 }
