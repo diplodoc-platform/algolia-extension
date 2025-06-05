@@ -12,7 +12,7 @@ const DEFAULT_CONFIG = {
     base: '',
 };
 
-const TRIM_WORDS = 10;
+const TRIM_WORDS = 30;
 
 const UNKNOWN_HANDLER = {
     message: 'Unknown message type!',
