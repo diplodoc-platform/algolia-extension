@@ -14,7 +14,7 @@ This extension provides [Algolia](https://www.algolia.com/) search integration f
 ## Installation
 
 ```bash
-npm install @diplodoc/algolia
+npm install @diplodoc/algolia-extension
 ```
 
 ## How Indexing Works
@@ -89,7 +89,7 @@ Example priority: CLI flags > Environment variables > Configuration file
 The extension can be used with the [Diplodoc CLI](https://github.com/diplodoc-platform/cli) by adding it to the extensions parameter:
 
 ```bash
-npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia-extension
 ```
 
 ### Method 1: Using Environment Variables
@@ -99,14 +99,14 @@ export ALGOLIA_APP_ID="your-app-id"
 export ALGOLIA_API_KEY="your-api-key"
 export ALGOLIA_INDEX_NAME="your-index-name"
 
-npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia-extension
 ```
 
 ### Method 2: Using CLI Flags
 
 ```bash
 npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs \
-  --extensions @diplodoc/algolia \
+  --extensions @diplodoc/algolia-extension \
   --app-id "your-app-id" \
   --api-key "your-api-key" \
   --index-name "your-index-name" \
@@ -130,7 +130,7 @@ Then run:
 ```bash
 # API key should be provided via environment variable or CLI flag
 export ALGOLIA_API_KEY="your-api-key"
-npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia
+npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/algolia-extension
 ```
 
 ### Using the Index Command
@@ -138,7 +138,7 @@ npx -y @diplodoc/cli -i ./input-docs -o ~/output-docs --extensions @diplodoc/alg
 The extension provides a dedicated `index` command for indexing documentation without rebuilding it:
 
 ```bash
-npx -y @diplodoc/cli index -i ~/output-docs --extensions @diplodoc/algolia
+npx -y @diplodoc/cli index -i ~/output-docs --extensions @diplodoc/algolia-extension
 ```
 
 This is useful when you want to update the search index without rebuilding the entire documentation. The `index` command processes the already built documentation and uploads it to Algolia.
@@ -147,7 +147,7 @@ Options for the `index` command:
 
 ```bash
 npx -y @diplodoc/cli index -i ~/output-docs \
-  --extensions @diplodoc/algolia \
+  --extensions @diplodoc/algolia-extension \
   --app-id "your-app-id" \
   --api-key "your-api-key" \
   --index-name "your-index-name"
