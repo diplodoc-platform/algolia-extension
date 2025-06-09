@@ -11,7 +11,9 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc && cp src/client/search.js dist/client/search.js",
+    "build": "npm run build:clean && tsc && cp src/client/search.js dist/client/search.js",
+    "build:esbuild": "npm run build:clean && node esbuild.config.js && mkdir -p dist/client && cp src/client/search.js dist/client/search.js",
+    "build:clean": "rm -rf dist",
     "build:types": "tsc --emitDeclarationOnly",
     "build:all": "npm run build && npm run build:types",
     "lint": "lint update && lint",
@@ -38,6 +40,7 @@
     "@types/jest": "^29.5.0",
     "@types/lodash": "^4.14.202",
     "@types/node": "^18.0.0",
+    "esbuild": "^0.23.1",
     "eslint": "^8.0.0",
     "jest": "^29.5.0",
     "prettier": "^3.0.0",
