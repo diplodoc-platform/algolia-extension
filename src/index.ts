@@ -72,7 +72,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
             throw new Error('Input path is required');
         }
 
-        const indexName = get(this.config, 'search.indexName', 'docs');
+        const indexName = get(this.config, 'search.indexName') || 'docs';
 
         if (!appId || !apiKey || !indexName) {
             throw new Error(
