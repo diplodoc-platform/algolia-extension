@@ -32,7 +32,7 @@
     "ts-dedent": "^2.2.0"
   },
   "devDependencies": {
-    "@diplodoc/cli": "^5.0.0-rc-25",
+    "@diplodoc/cli": "^5.0.3",
     "@diplodoc/lint": "^1.2.1",
     "@diplodoc/tsconfig": "^1.0.2",
     "@types/jest": "^29.5.0",
