@@ -1,8 +1,8 @@
 import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
-import {BaseArgs, BaseProgram, withConfigDefaults} from '@diplodoc/cli/lib/program';
+import {BaseArgs, BaseProgram, getHooks, withConfigDefaults} from '@diplodoc/cli/lib/program';
 import {getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
-import {Command, Config, ExtendedOption} from '@diplodoc/cli/lib/config';
+import {Command, Config, ExtendedOption, defined} from '@diplodoc/cli/lib/config';
 import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
 import {dedent} from 'ts-dedent';
@@ -66,13 +66,15 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
         indexName: string;
     } {
         const {input} = args;
-        const {appId, apiKey} = this.config.search;
 
         if (!input) {
             throw new Error('Input path is required');
         }
 
-        const indexName = get(this.config, 'search.indexName') || 'docs';
+        const appId = get(this.config, 'search.appId') || get(this.config, 'appId');
+        const apiKey = get(this.config, 'search.apiKey') || get(this.config, 'apiKey');
+        const indexName =
+            get(this.config, 'search.indexName') || get(this.config, 'indexName') || 'docs';
 
         if (!appId || !apiKey || !indexName) {
             throw new Error(
@@ -108,6 +110,7 @@ interface SearchConfig {
     indexPrefix?: string;
     provider?: string;
     index?: boolean;
+    api?: string;
 }
 
 interface ExtensionConfig extends BaseConfig {
@@ -121,6 +124,43 @@ export class Extension implements IExtension {
         this.addAlgoliaModule(program);
 
         if (!Extension.hooksRegistered) {
+            getHooks(program).Command.tap('AlgoliaSearch', (command) => {
+                command.addOption(options.appId);
+                command.addOption(options.apiKey);
+                command.addOption(options.indexName);
+                command.addOption(options.index);
+                command.addOption(options.searchKey);
+                command.addOption(options.provider);
+                command.addOption(options.api);
+            });
+
+            getHooks(program).Config.tap('AlgoliaSearch', (config, args) => {
+                const configs = [args, config, config.search];
+                config.search = config.search || {};
+                config.search.appId = process.env.ALGOLIA_APP_ID || defined('appId', ...configs);
+                config.search.apiKey =
+                    process.env.ALGOLIA_API_KEY || defined('apiKey', args, ...configs);
+                config.search.indexName =
+                    process.env.ALGOLIA_INDEX_NAME ||
+                    defined('indexName', args, ...configs) ||
+                    'docs';
+                config.search.searchKey =
+                    process.env.ALGOLIA_SEARCH_KEY ||
+                    defined('searchKey', args, ...configs) ||
+                    'search-api-key';
+                config.search.provider =
+                    process.env.ALGOLIA_PROVIDER ||
+                    defined('provider', args, ...configs) ||
+                    'algolia';
+                config.search.api =
+                    process.env.ALGOLIA_API_PATH ||
+                    defined('api', args, ...configs) ||
+                    '_search/api.js';
+                config.search.index = defined('index', args, ...configs) || false;
+
+                return config;
+            });
+
             this.registerBuildHooks(program);
             Extension.hooksRegistered = true;
         }
@@ -190,14 +230,12 @@ export class Extension implements IExtension {
     }
 
     private createAlgoliaProvider(run: AlgoliaRun, config: SearchConfig): AlgoliaProvider {
-        const indexName = process.env.ALGOLIA_INDEX_NAME || get(config, 'indexName', 'docs');
-
         return new AlgoliaProvider(run, {
-            appId: process.env.ALGOLIA_APP_ID || get(config, 'appId', ''),
-            apiKey: process.env.ALGOLIA_API_KEY || get(config, 'apiKey'),
-            searchKey: process.env.ALGOLIA_SEARCH_KEY || get(config, 'searchKey', 'search-api-key'),
-            indexName,
-            api: process.env.ALGOLIA_API_PATH || get(config, 'api', API_LINK),
+            appId: get(config, 'appId', ''),
+            apiKey: get(config, 'apiKey'),
+            searchKey: get(config, 'searchKey', 'search-api-key'),
+            indexName: get(config, 'indexName', 'docs'),
+            api: get(config, 'api', API_LINK),
             index: get(config, 'index', false),
         });
     }

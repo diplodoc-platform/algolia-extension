@@ -81,7 +81,10 @@ export interface AlgoliaConfig {
         provider: 'algolia';
         appId: string;
         apiKey: string;
-        indexName: string;
+        indexName?: string;
+        searchKey?: string;
+        index?: boolean;
+        api?: string;
     };
 }
 
