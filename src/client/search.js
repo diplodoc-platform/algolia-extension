@@ -59,13 +59,13 @@ self.api = {
 
 async function search(config, query, count = 10, page = 1) {
     const appId = config.appId;
-    const searchKey = config.searchKey;
+    const searchApiKey = config.searchApiKey;
     const indexName = config.indexName;
     const querySettings = config.querySettings;
 
-    if (!appId || !searchKey || !indexName) {
+    if (!appId || !searchApiKey || !indexName) {
         throw new Error(
-            'Algolia configuration is incomplete. Missing appId, searchKey or indexName.',
+            'Algolia configuration is incomplete. Missing appId, searchApiKey or indexName.',
         );
     }
 
@@ -85,7 +85,7 @@ async function search(config, query, count = 10, page = 1) {
         method: 'POST',
         headers: {
             'x-algolia-application-id': appId,
-            'x-algolia-api-key': searchKey,
+            'x-algolia-api-key': searchApiKey,
         },
         body: JSON.stringify(requestBody),
     });

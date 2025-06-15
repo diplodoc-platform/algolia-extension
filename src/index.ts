@@ -95,7 +95,6 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
         return new AlgoliaProvider(this.run, {
             appId,
             apiKey,
-            searchKey: 'search-api-key',
             indexName,
             index: true,
         });
@@ -106,7 +105,7 @@ interface SearchConfig {
     appId?: string;
     apiKey?: string;
     indexName?: string;
-    searchKey?: string;
+    searchApiKey?: string;
     indexPrefix?: string;
     provider?: string;
     index?: boolean;
@@ -129,7 +128,7 @@ export class Extension implements IExtension {
                 command.addOption(options.apiKey);
                 command.addOption(options.indexName);
                 command.addOption(options.index);
-                command.addOption(options.searchKey);
+                command.addOption(options.searchApiKey);
                 command.addOption(options.provider);
                 command.addOption(options.api);
             });
@@ -144,10 +143,9 @@ export class Extension implements IExtension {
                     process.env.ALGOLIA_INDEX_NAME ||
                     defined('indexName', args, ...configs) ||
                     'docs';
-                config.search.searchKey =
-                    process.env.ALGOLIA_SEARCH_KEY ||
-                    defined('searchKey', args, ...configs) ||
-                    'search-api-key';
+                config.search.searchApiKey =
+                    process.env.ALGOLIA_SEARCH_API_KEY ||
+                    defined('searchApiKey', args, ...configs)
                 config.search.provider =
                     process.env.ALGOLIA_PROVIDER ||
                     defined('provider', args, ...configs) ||
@@ -233,7 +231,7 @@ export class Extension implements IExtension {
         return new AlgoliaProvider(run, {
             appId: get(config, 'appId', ''),
             apiKey: get(config, 'apiKey'),
-            searchKey: get(config, 'searchKey', 'search-api-key'),
+            searchApiKey: get(config, 'searchApiKey'),
             indexName: get(config, 'indexName', 'docs'),
             api: get(config, 'api', API_LINK),
             index: get(config, 'index', false),

@@ -97,7 +97,7 @@ describe('AlgoliaProvider', () => {
         config = {
             appId: 'test-app-id',
             apiKey: 'test-api-key',
-            searchKey: 'test-search-key',
+            searchApiKey: 'test-search-api-key',
             indexName: 'test-index',
             index: true,
         };
@@ -115,7 +115,7 @@ describe('AlgoliaProvider', () => {
                 appId: 'test-app-id',
                 apiKey: 'test-api-key',
                 indexName: 'docs',
-                searchKey: 'test-search-key',
+                searchApiKey: 'test-search-api-key',
             };
 
             const newProvider = new AlgoliaProvider(
@@ -191,7 +191,7 @@ describe('AlgoliaProvider', () => {
                 link: join('_search', 'en', 'index.html'),
                 appId: 'test-app-id',
                 indexName: 'test-index-en',
-                searchKey: 'test-search-key',
+                searchApiKey: 'test-search-api-key',
                 querySettings: {},
             });
         });

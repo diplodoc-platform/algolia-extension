@@ -26,11 +26,10 @@ export const options = {
         flags: '--index [boolean]',
         desc: 'Whether to create and upload an index for search',
     }),
-    searchKey: option({
-        flags: '--search-key <key>',
+    searchApiKey: option({
+        flags: '--search-api-key <key>',
         desc: 'Client-side API key for search',
-        env: 'ALGOLIA_SEARCH_KEY',
-        default: 'search-api-key',
+        env: 'ALGOLIA_SEARCH_API_KEY',
     }),
     provider: option({
         flags: '--search-provider <name>',

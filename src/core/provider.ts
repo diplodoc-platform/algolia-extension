@@ -28,7 +28,7 @@ export class AlgoliaProvider implements SearchProvider {
     private index: boolean;
     private appId: string;
     private apiKey?: string;
-    private searchKey: string;
+    private searchApiKey?: string;
     private indexName: string;
     private indexSettings: Partial<IndexSettings>;
     private querySettings: Partial<SearchParamsObject>;
@@ -57,7 +57,7 @@ export class AlgoliaProvider implements SearchProvider {
         this.logger.info(`Using index name: ${this.indexName}`);
 
         this.apiKey = config.apiKey;
-        this.searchKey = config.searchKey || 'search-api-key';
+        this.searchApiKey = config.searchApiKey;
         this.indexSettings = config.indexSettings || {};
         this.querySettings = config.querySettings || {};
         this.apiLink = config.api || '_search/api.js';
@@ -218,7 +218,7 @@ export class AlgoliaProvider implements SearchProvider {
             link: pageLink(lang),
             appId: this.appId,
             indexName: this.createIndexName(lang),
-            searchKey: this.searchKey,
+            searchApiKey: this.searchApiKey,
             querySettings: this.querySettings,
         };
     }

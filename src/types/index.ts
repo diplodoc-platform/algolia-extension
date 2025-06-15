@@ -3,8 +3,8 @@ import type {IndexSettings, SearchParamsObject} from 'algoliasearch';
 export interface AlgoliaProviderConfig {
     appId: string;
     apiKey?: string;
-    searchKey: string;
-    indexName: string;
+    searchApiKey?: string;
+    indexName?: string;
     indexSettings?: Partial<IndexSettings>;
     querySettings?: Partial<SearchParamsObject>;
     index?: boolean;
@@ -82,7 +82,7 @@ export interface AlgoliaConfig {
         appId: string;
         apiKey: string;
         indexName?: string;
-        searchKey?: string;
+        searchApiKey?: string;
         index?: boolean;
         api?: string;
     };
