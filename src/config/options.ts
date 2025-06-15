@@ -25,7 +25,6 @@ export const options = {
     index: option({
         flags: '--index [boolean]',
         desc: 'Whether to create and upload an index for search',
-        default: false,
     }),
     searchKey: option({
         flags: '--search-key <key>',
