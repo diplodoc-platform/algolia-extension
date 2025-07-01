@@ -144,8 +144,7 @@ export class Extension implements IExtension {
                     defined('indexName', args, ...configs) ||
                     'docs';
                 config.search.searchApiKey =
-                    process.env.ALGOLIA_SEARCH_API_KEY ||
-                    defined('searchApiKey', args, ...configs)
+                    process.env.ALGOLIA_SEARCH_API_KEY || defined('searchApiKey', args, ...configs);
                 config.search.provider =
                     process.env.ALGOLIA_PROVIDER ||
                     defined('provider', args, ...configs) ||
