@@ -163,36 +163,19 @@ const HANDLERS = {
 };
 
 self.onmessage = async function (message) {
-    // Получаем порт из сообщения
-    const port = message.ports && message.ports.length ? message.ports[0] : null;
+    const [port] = message.ports;
     const type = message.data.type;
     const handler = HANDLERS[type];
 
-    // Если обработчик не найден
     if (!handler) {
-        if (port) {
-            port.postMessage({error: UNKNOWN_HANDLER});
-        } else {
-            self.postMessage({error: UNKNOWN_HANDLER});
-        }
+        port.postMessage({error: UNKNOWN_HANDLER});
         return;
     }
 
     try {
         const result = await handler(message.data);
-
-        // Отправляем результат через порт, если он есть
-        if (port) {
-            port.postMessage({result});
-        } else {
-            self.postMessage({result});
-        }
+        port.postMessage({result});
     } catch (error) {
-        // Отправляем ошибку через порт, если он есть
-        if (port) {
-            port.postMessage({error});
-        } else {
-            self.postMessage({error});
-        }
+        port.postMessage({error});
     }
 };
