@@ -1,6 +1,6 @@
 {
   "name": "@diplodoc/algolia-extension",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Algolia search integration extension for Diplodoc",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
