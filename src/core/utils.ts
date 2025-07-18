@@ -49,6 +49,7 @@ export async function uploadRecordsToAlgolia(
             indexSettings: {
                 ...defaultSettings,
                 ...indexSettings,
+                customRanking: ['asc(level)'],
                 indexLanguages: uniq([lang, baseLang]) as SupportedLanguage[],
             },
         });
@@ -84,7 +85,9 @@ export async function uploadRecordsToAlgolia(
 }
 
 function findTaskIDs(obj: unknown): number[] {
-    if (!obj || typeof obj !== 'object') return [];
+    if (!obj || typeof obj !== 'object') {
+        return [];
+    }
 
     const result: number[] = [];
     const objRecord = obj as Record<string, unknown>;

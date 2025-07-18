@@ -73,6 +73,30 @@ describe('Document Processor', () => {
             expect(sections[2].heading).toBe('Section 2');
         });
 
+        it('should split document into sections by headings and set level', () => {
+            const html = `
+        <body>
+          <h1>Main Heading</h1>
+          <p>Main content</p>
+          <h2>Section 1</h2>
+          <p>Section 1 content</p>
+          <h2>Section 2</h2>
+          <p>Section 2 content</p>
+        </body>
+      `;
+
+            const {sections, mainHeading} = splitDocumentIntoSections(html);
+
+            expect(mainHeading).toBe('Main Heading');
+            expect(sections).toHaveLength(3);
+            expect(sections[0].heading).toBe('Main Heading');
+            expect(sections[0].level).toBe(1);
+            expect(sections[1].heading).toBe('Section 1');
+            expect(sections[1].level).toBe(2);
+            expect(sections[2].heading).toBe('Section 2');
+            expect(sections[2].level).toBe(2);
+        });
+
         it('should handle document without headings', () => {
             const html = `
         <body>
