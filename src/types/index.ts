@@ -21,12 +21,14 @@ export interface AlgoliaRecord {
     url: string;
     lang: string;
     section?: string;
+    level?: number;
 }
 
 export interface DocumentSection {
     heading: string;
     content: string;
     anchor?: string;
+    level?: number;
 }
 
 export interface DocumentMeta {

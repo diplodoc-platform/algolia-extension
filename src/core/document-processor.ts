@@ -76,6 +76,8 @@ export function splitDocumentIntoSections(html: string): {
                     sections.push({...currentSection});
                 }
 
+                const level = $el[0].name[1];
+
                 let headingText = '';
                 for (const el of $el.contents()) {
                     if (el.type === 'text') {
@@ -95,6 +97,7 @@ export function splitDocumentIntoSections(html: string): {
                     heading: headingText,
                     anchor: $el.attr('id') || '',
                     content: '',
+                    level: parseInt(level, 10),
                 };
             } else {
                 currentSection.content += $el.text().trim() + ' ';
@@ -139,6 +142,7 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
             content: html2text(html).slice(0, 5000),
             headings: extractHeadings(html),
             anchor: '',
+            level: 1,
         };
 
         if (getRecordSize(record) >= MAX_RECORD_SIZE) {
@@ -158,6 +162,7 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
             headings: [section.heading],
             anchor: section.anchor,
             section: section.heading || undefined,
+            level: section.level || 1,
         };
 
         if (getRecordSize(record) >= MAX_RECORD_SIZE) {
