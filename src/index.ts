@@ -1,7 +1,7 @@
 import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
 import {BaseArgs, BaseProgram, getHooks, withConfigDefaults} from '@diplodoc/cli/lib/program';
-import {getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
+import {BuildRun, getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
 import {Command, Config, ExtendedOption, defined} from '@diplodoc/cli/lib/config';
 import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
@@ -92,7 +92,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     }): AlgoliaProvider {
         const {appId, apiKey, indexName} = config;
 
-        return new AlgoliaProvider(this.run, {
+        return new AlgoliaProvider(this.run as unknown as BuildRun, {
             appId,
             apiKey,
             indexName,
@@ -177,7 +177,10 @@ export class Extension implements IExtension {
                 getSearchHooks<ExtensionConfig['search']>(run?.search)
                     .Provider.for('algolia')
                     .tap('AlgoliaSearch', (_connector, config) => {
-                        const provider = this.createAlgoliaProvider(run, config);
+                        const provider = this.createAlgoliaProvider(
+                            run as unknown as AlgoliaRun,
+                            config,
+                        );
 
                         getEntryHooks(run.entry).State.tap('AlgoliaSearch', (state) => {
                             state.search = provider.config(state.lang);
@@ -211,7 +214,9 @@ export class Extension implements IExtension {
                                 template.addScript(
                                     dedent`
                                     const data = document.querySelector('script#diplodoc-state');
-                                    window.__DATA__ = JSON.parse((function ${template.unescape.toString()})(data.innerText));
+                                    window.__DATA__ = {
+                                        search: JSON.parse((function ${template.unescape.toString()})(data.innerText)),
+                                    }
                                 `,
                                     {
                                         inline: true,
@@ -227,7 +232,7 @@ export class Extension implements IExtension {
     }
 
     private createAlgoliaProvider(run: AlgoliaRun, config: SearchConfig): AlgoliaProvider {
-        return new AlgoliaProvider(run, {
+        return new AlgoliaProvider(run as unknown as BuildRun, {
             appId: get(config, 'appId', ''),
             apiKey: get(config, 'apiKey'),
             searchApiKey: get(config, 'searchApiKey'),

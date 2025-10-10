@@ -59,6 +59,7 @@ export interface ProcessMessage extends WorkerMessage {
         html: string;
         title: string;
         meta: DocumentMeta;
+        skipHtmlExtension?: boolean;
     };
 }
 
@@ -96,4 +97,5 @@ export interface DocumentProcessingContext {
     html: string;
     title: string;
     meta: DocumentMeta;
+    skipHtmlExtension?: boolean;
 }

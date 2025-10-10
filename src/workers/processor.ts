@@ -47,14 +47,14 @@ parentPort.on('message', (message: WorkerMessage): void => {
 
         if (message.type === 'process') {
             const processMessage = message as ProcessMessage;
-            const {path, lang, html, title, meta} = processMessage.data;
+            const {path, lang, html, title, meta, skipHtmlExtension} = processMessage.data;
 
             if (meta.noIndex) {
                 sendResult([]);
                 return;
             }
 
-            const records = processDocument({path, lang, html, title, meta});
+            const records = processDocument({path, lang, html, title, meta, skipHtmlExtension});
             sendResult(records);
         }
     } catch (error) {
