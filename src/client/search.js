@@ -14,10 +14,6 @@ const DEFAULT_CONFIG = {
 
 const TRIM_WORDS = 30;
 
-const UNKNOWN_HANDLER = {
-    message: 'Unknown message type!',
-    code: 'UNKNOWN_HANDLER',
-};
 const NOT_INITIALIZED_CONFIG = {
     message: 'Worker is not initialized with required config!',
     code: 'NOT_INITIALIZED',
@@ -180,7 +176,6 @@ self.onmessage = async function (message) {
     const handler = HANDLERS[type];
 
     if (!handler) {
-        reply(message, {error: UNKNOWN_HANDLER});
         return;
     }
 
