@@ -9,7 +9,6 @@ import type {BuildRun, EntryInfo, SearchProvider} from '@diplodoc/cli';
 import {shortLink} from '@diplodoc/cli/lib/utils';
 import {algoliasearch} from 'algoliasearch';
 import {join} from 'path';
-import {LogConsumer} from '@diplodoc/cli/lib/logger';
 
 import {AlgoliaProviderConfig, AlgoliaRecord, DocumentMeta} from '../types';
 import {AlgoliaWorkerPool} from '../workers';
@@ -76,7 +75,7 @@ export class AlgoliaProvider implements SearchProvider {
         }
 
         if (run?.logger) {
-            this.logger.pipe(run.logger as unknown as LogConsumer);
+            this.logger.pipe(run.logger);
         }
 
         try {

@@ -1,7 +1,7 @@
 import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 
 import {BaseArgs, BaseProgram, getHooks, withConfigDefaults} from '@diplodoc/cli/lib/program';
-import {BuildRun, getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
+import {getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
 import {Command, Config, ExtendedOption, defined} from '@diplodoc/cli/lib/config';
 import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
@@ -91,7 +91,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     }): AlgoliaProvider {
         const {appId, apiKey, indexName} = config;
 
-        return new AlgoliaProvider(this.run as unknown as BuildRun, {
+        return new AlgoliaProvider(this.run, {
             appId,
             apiKey,
             indexName,
@@ -176,10 +176,7 @@ export class Extension implements IExtension {
                 getSearchHooks<ExtensionConfig['search']>(run?.search)
                     .Provider.for('algolia')
                     .tap('AlgoliaSearch', (_connector, config) => {
-                        const provider = this.createAlgoliaProvider(
-                            run as unknown as AlgoliaRun,
-                            config,
-                        );
+                        const provider = this.createAlgoliaProvider(run, config);
 
                         getEntryHooks(run.entry).State.tap('AlgoliaSearch', (state) => {
                             state.search = provider.config(state.lang);
@@ -197,7 +194,7 @@ export class Extension implements IExtension {
     }
 
     private createAlgoliaProvider(run: AlgoliaRun, config: SearchConfig): AlgoliaProvider {
-        return new AlgoliaProvider(run as unknown as BuildRun, {
+        return new AlgoliaProvider(run, {
             appId: get(config, 'appId', ''),
             apiKey: get(config, 'apiKey'),
             searchApiKey: get(config, 'searchApiKey'),

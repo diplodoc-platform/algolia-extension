@@ -3,6 +3,7 @@
 /// <reference lib="webworker" />
 
 /* eslint-disable new-cap */
+/* eslint-disable no-console */
 /* eslint-env worker */
 
 const DEFAULT_CONFIG = {
@@ -14,10 +15,16 @@ const DEFAULT_CONFIG = {
 
 const TRIM_WORDS = 30;
 
+const UNKNOWN_HANDLER = {
+    message: 'Unknown message type!',
+    code: 'UNKNOWN_HANDLER',
+};
+
 const NOT_INITIALIZED_CONFIG = {
     message: 'Worker is not initialized with required config!',
     code: 'NOT_INITIALIZED',
 };
+
 const NOT_INITIALIZED_API = {
     message: 'Worker is not initialized with required api!',
     code: 'NOT_INITIALIZED',
@@ -176,6 +183,10 @@ self.onmessage = async function (message) {
     const handler = HANDLERS[type];
 
     if (!handler) {
+        const errorMessage = `${UNKNOWN_HANDLER.code}: ${UNKNOWN_HANDLER.message}`;
+
+        console.error(errorMessage);
+
         return;
     }
 
