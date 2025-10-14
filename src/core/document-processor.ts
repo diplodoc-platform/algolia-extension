@@ -1,5 +1,6 @@
 import {load} from 'cheerio';
 import {html2text} from '@diplodoc/search-extension/indexer';
+import {shortLink} from '@diplodoc/cli/lib/utils';
 
 import {AlgoliaRecord, DocumentProcessingContext, DocumentSection} from '../types';
 
@@ -116,17 +117,21 @@ function createBaseRecord(
     lang: string,
     title: string,
     keywords: string[] = [],
+    skipHtmlExtension?: boolean,
 ): Omit<AlgoliaRecord, 'objectID' | 'content' | 'headings' | 'anchor' | 'section'> {
+    const url = path.replace(/\.\w+$/, '') + '.html';
+    const prettyUrl = skipHtmlExtension ? shortLink(url) : url;
+
     return {
         title,
         keywords,
-        url: path.replace(/\.\w+$/, '') + '.html',
+        url: prettyUrl,
         lang,
     };
 }
 
 export function processDocument(context: DocumentProcessingContext): AlgoliaRecord[] {
-    const {path, lang, html, title, meta} = context;
+    const {path, lang, html, title, meta, skipHtmlExtension} = context;
     const {sections, mainHeading} = splitDocumentIntoSections(html);
     const records: AlgoliaRecord[] = [];
     const baseTitle = title || meta.title || mainHeading || '';
@@ -135,7 +140,7 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
     const MAX_RECORD_SIZE = 9600;
 
     if (sections.length === 0) {
-        const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords);
+        const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords, skipHtmlExtension);
         const record: AlgoliaRecord = {
             ...baseRecord,
             objectID: path.replace(/\.\w+$/, ''),
@@ -154,7 +159,7 @@ export function processDocument(context: DocumentProcessingContext): AlgoliaReco
     }
 
     sections.forEach((section, index) => {
-        const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords);
+        const baseRecord = createBaseRecord(path, lang, baseTitle, baseKeywords, skipHtmlExtension);
         const record: AlgoliaRecord = {
             ...baseRecord,
             objectID: `${path.replace(/\.\w+$/, '')}-${index}`,

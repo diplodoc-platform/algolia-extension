@@ -3,6 +3,7 @@
 /// <reference lib="webworker" />
 
 /* eslint-disable new-cap */
+/* eslint-disable no-console */
 /* eslint-env worker */
 
 const DEFAULT_CONFIG = {
@@ -18,10 +19,12 @@ const UNKNOWN_HANDLER = {
     message: 'Unknown message type!',
     code: 'UNKNOWN_HANDLER',
 };
+
 const NOT_INITIALIZED_CONFIG = {
     message: 'Worker is not initialized with required config!',
     code: 'NOT_INITIALIZED',
 };
+
 const NOT_INITIALIZED_API = {
     message: 'Worker is not initialized with required api!',
     code: 'NOT_INITIALIZED',
@@ -53,7 +56,12 @@ self.api = {
         AssertConfig(self.config);
         const result = await search(self.config, query, count, page);
         const formattedResults = format(self.config, result);
-        return formattedResults;
+        const total = result.nbHits || (result.hits ? result.hits.length : 0);
+
+        return {
+            items: formattedResults,
+            total: total,
+        };
     },
 };
 
@@ -162,20 +170,30 @@ const HANDLERS = {
     },
 };
 
+function reply(message, data) {
+    if (message.ports && message.ports[0]) {
+        message.ports[0].postMessage(data);
+    } else {
+        self.postMessage(data);
+    }
+}
+
 self.onmessage = async function (message) {
-    const [port] = message.ports;
     const type = message.data.type;
     const handler = HANDLERS[type];
 
     if (!handler) {
-        port.postMessage({error: UNKNOWN_HANDLER});
+        const errorMessage = `${UNKNOWN_HANDLER.code}: ${UNKNOWN_HANDLER.message}`;
+
+        console.error(errorMessage);
+
         return;
     }
 
     try {
         const result = await handler(message.data);
-        port.postMessage({result});
+        reply(message, {result});
     } catch (error) {
-        port.postMessage({error});
+        reply(message, {error});
     }
 };

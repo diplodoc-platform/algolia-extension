@@ -233,5 +233,21 @@ describe('Document Processor', () => {
 
             expect(records.length).toBeGreaterThan(0);
         });
+
+        it('the document should be processed with skipHtmlExtension', () => {
+            const context: DocumentProcessingContext = {
+                path: 'test-path.md',
+                lang: 'en',
+                html: '<p>Just a paragraph without .html</p>',
+                title: 'Test Document',
+                meta: {},
+                skipHtmlExtension: true,
+            };
+
+            const records = processDocument(context);
+
+            expect(records.length).toBe(1);
+            expect(records[0].url).toEqual('test-path');
+        });
     });
 });

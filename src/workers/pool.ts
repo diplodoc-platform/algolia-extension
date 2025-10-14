@@ -42,7 +42,14 @@ export class AlgoliaWorkerPool {
         }
     }
 
-    addTask(path: string, lang: string, html: string, title: string, meta: DocumentMeta): void {
+    addTask(
+        path: string,
+        lang: string,
+        html: string,
+        title: string,
+        meta: DocumentMeta,
+        skipHtmlExtension?: boolean,
+    ): void {
         const message: ProcessMessage = {
             type: 'process',
             data: {
@@ -51,6 +58,7 @@ export class AlgoliaWorkerPool {
                 html,
                 title,
                 meta: meta || {},
+                skipHtmlExtension,
             },
         };
 

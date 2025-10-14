@@ -6,6 +6,7 @@ import type {
 } from 'algoliasearch';
 import type {BuildRun, EntryInfo, SearchProvider} from '@diplodoc/cli';
 
+import {shortLink} from '@diplodoc/cli/lib/utils';
 import {algoliasearch} from 'algoliasearch';
 import {join} from 'path';
 
@@ -87,6 +88,8 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
     async add(path: string, lang: string, info: EntryInfo) {
+        const skipHtmlExtension = this.run.config?.skipHtmlExtension;
+
         if (!info.html) {
             return;
         }
@@ -98,7 +101,7 @@ export class AlgoliaProvider implements SearchProvider {
         }
 
         if (this.workerPool) {
-            this.workerPool.addTask(path, lang, info.html, title, meta);
+            this.workerPool.addTask(path, lang, info.html, title, meta, skipHtmlExtension);
         } else {
             this.processDocumentSync(path, lang, info.html, title, meta);
         }
@@ -188,6 +191,7 @@ export class AlgoliaProvider implements SearchProvider {
             }
 
             const page = await this.run.search.page(lang);
+
             await this.run.write(join(this.run.output, pageLink(lang)), page);
 
             const jsonPath = join(this.run.output, '_search', `${lang}-algolia.json`);
@@ -212,10 +216,15 @@ export class AlgoliaProvider implements SearchProvider {
     }
 
     config(lang: string) {
+        const skipHtmlExtension = this.run.config?.skipHtmlExtension;
+
+        const url = pageLink(lang);
+        const prettyUrl = skipHtmlExtension ? shortLink(url) : url;
+
         return {
             provider: 'algolia',
             api: this.apiLink,
-            link: pageLink(lang),
+            link: prettyUrl,
             appId: this.appId,
             indexName: this.createIndexName(lang),
             searchApiKey: this.searchApiKey,
@@ -238,7 +247,9 @@ export class AlgoliaProvider implements SearchProvider {
         title: string,
         meta: DocumentMeta,
     ): void {
-        const records = processDocument({path, lang, html, title, meta});
+        const skipHtmlExtension = this.run.config?.skipHtmlExtension;
+
+        const records = processDocument({path, lang, html, title, meta, skipHtmlExtension});
 
         this.objects[lang] = this.objects[lang] || [];
 

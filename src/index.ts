@@ -5,7 +5,6 @@ import {getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
 import {Command, Config, ExtendedOption, defined} from '@diplodoc/cli/lib/config';
 import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
-import {dedent} from 'ts-dedent';
 
 import {AlgoliaProvider} from './core/provider';
 import {options} from './config';
@@ -188,38 +187,6 @@ export class Extension implements IExtension {
                                 position: 'state',
                             });
                         });
-
-                        getSearchHooks<ExtensionConfig['search']>(run?.search).Page.tap(
-                            'AlgoliaSearch',
-                            (template) => {
-                                const searchConfig = provider.config(template.lang);
-
-                                template.addScript(
-                                    template.escape(
-                                        JSON.stringify({...searchConfig, lang: template.lang}),
-                                    ),
-                                    {
-                                        inline: true,
-                                        position: 'state',
-                                        attrs: {
-                                            type: 'application/json',
-                                            id: 'diplodoc-state',
-                                        },
-                                    },
-                                );
-
-                                template.addScript(
-                                    dedent`
-                                    const data = document.querySelector('script#diplodoc-state');
-                                    window.__DATA__ = JSON.parse((function ${template.unescape.toString()})(data.innerText));
-                                `,
-                                    {
-                                        inline: true,
-                                        position: 'state',
-                                    },
-                                );
-                            },
-                        );
 
                         return provider;
                     });
