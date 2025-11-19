@@ -6,6 +6,9 @@
     "type": "git",
     "url": "git@github.com:diplodoc-platform/algolia-extension.git"
   },
+  "engines": {
+    "npm": ">=11.5.1"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
