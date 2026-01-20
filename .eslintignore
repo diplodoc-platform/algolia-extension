@@ -11,3 +11,8 @@ node_modules
 /coverage
 /test
 /external
+.lintstagedrc.js
+.eslintrc.js
+.prettierrc.js
+.stylelintrc.js
+esbuild/**/*.mjs
