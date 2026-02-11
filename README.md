@@ -1,3 +1,10 @@
+[![NPM version](https://img.shields.io/npm/v/@diplodoc/algolia-extension.svg?style=flat)](https://www.npmjs.org/package/@diplodoc/algolia-extension)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_algolia-extension&metric=alert_status)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_algolia-extension)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_algolia-extension&metric=coverage)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_algolia-extension)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_algolia-extension&metric=sqale_rating)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_algolia-extension)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_algolia-extension&metric=reliability_rating)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_algolia-extension)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=diplodoc-platform_algolia-extension&metric=security_rating)](https://sonarcloud.io/summary/overall?id=diplodoc-platform_algolia-extension)
+
 # Algolia Extension for Diplodoc
 
 This extension provides [Algolia](https://www.algolia.com/) search integration for [Diplodoc](https://diplodoc.com/) documentation. It enables powerful search functionality for your documentation by indexing content into Algolia and providing a seamless search experience for your users.
@@ -50,13 +57,11 @@ To use this extension, you need to provide Algolia credentials:
 You can configure the extension using three different methods:
 
 1. **Environment Variables**
-
    - Set environment variables before running the CLI
    - Useful for CI/CD pipelines and secure storage of API keys
    - Example: `ALGOLIA_APP_ID`, `ALGOLIA_API_KEY`, `ALGOLIA_INDEX_NAME`
 
 2. **CLI Flags**
-
    - Pass options directly to the CLI command
    - Overrides environment variables
    - Example: `--app-id`, `--api-key`, `--index-name`
@@ -70,17 +75,17 @@ Example priority: CLI flags > Environment variables > Configuration file
 
 ### Parameter Availability by Configuration Method
 
-| Parameter     | CLI Flag            | Environment Variable | .yfm Config            | Description                                                     |
-| ------------- | ------------------- | -------------------- | ---------------------- | --------------------------------------------------------------- |
-| appId         | `--app-id`          | `ALGOLIA_APP_ID`     | `search.appId`         | Algolia Application ID                                          |
-| apiKey        | `--api-key`         | `ALGOLIA_API_KEY`    | `search.apiKey`        | Algolia API Key for indexing                                    |
-| indexName     | `--index-name`      | `ALGOLIA_INDEX_NAME` | `search.indexName`     | Index name (e.g., "docs")                                       |
-| index         | `--index`           | -                    | `search.index`         | Whether to upload indices to Algolia (default: false)           |
-| searchApiKey     | `--search-api-key`      | `ALGOLIA_SEARCH_API_KEY` | `search.searchApiKey`     | Client-side API key for search    |
-| provider      | `--search-provider` | `ALGOLIA_PROVIDER`   | `search.provider`      | Search provider name (default: "algolia")                       |
-| api           | `--search-api`      | `ALGOLIA_API_PATH`   | `search.api`           | Path to the client-side search API (default: "\_search/api.js") |
-| indexSettings | -                   | -                    | `search.indexSettings` | Algolia index settings (searchable attributes, etc.)            |
-| querySettings | -                   | -                    | `search.querySettings` | Algolia query settings (hits per page, etc.)                    |
+| Parameter     | CLI Flag            | Environment Variable     | .yfm Config            | Description                                                     |
+| ------------- | ------------------- | ------------------------ | ---------------------- | --------------------------------------------------------------- |
+| appId         | `--app-id`          | `ALGOLIA_APP_ID`         | `search.appId`         | Algolia Application ID                                          |
+| apiKey        | `--api-key`         | `ALGOLIA_API_KEY`        | `search.apiKey`        | Algolia API Key for indexing                                    |
+| indexName     | `--index-name`      | `ALGOLIA_INDEX_NAME`     | `search.indexName`     | Index name (e.g., "docs")                                       |
+| index         | `--index`           | -                        | `search.index`         | Whether to upload indices to Algolia (default: false)           |
+| searchApiKey  | `--search-api-key`  | `ALGOLIA_SEARCH_API_KEY` | `search.searchApiKey`  | Client-side API key for search                                  |
+| provider      | `--search-provider` | `ALGOLIA_PROVIDER`       | `search.provider`      | Search provider name (default: "algolia")                       |
+| api           | `--search-api`      | `ALGOLIA_API_PATH`       | `search.api`           | Path to the client-side search API (default: "\_search/api.js") |
+| indexSettings | -                   | -                        | `search.indexSettings` | Algolia index settings (searchable attributes, etc.)            |
+| querySettings | -                   | -                        | `search.querySettings` | Algolia query settings (hits per page, etc.)                    |
 
 ## Usage
 
