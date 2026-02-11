@@ -1,5 +1,6 @@
 import type {BaseArgs, BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
 import type {Config, ExtendedOption} from '@diplodoc/cli/lib/config';
+import type {BuildRun} from '@diplodoc/cli';
 import type {AlgoliaConfig} from './types';
 
 import {BaseProgram, getHooks, withConfigDefaults} from '@diplodoc/cli/lib/program';
@@ -92,7 +93,7 @@ export class AlgoliaProgram extends BaseProgram<AlgoliaConfig> {
     }): AlgoliaProvider {
         const {appId, apiKey, indexName} = config;
 
-        return new AlgoliaProvider(this.run, {
+        return new AlgoliaProvider(this.run as unknown as BuildRun, {
             appId,
             apiKey,
             indexName,
@@ -194,7 +195,7 @@ export class Extension implements IExtension {
             });
     }
 
-    private createAlgoliaProvider(run: AlgoliaRun, config: SearchConfig): AlgoliaProvider {
+    private createAlgoliaProvider(run: BuildRun, config: SearchConfig): AlgoliaProvider {
         return new AlgoliaProvider(run, {
             appId: get(config, 'appId', ''),
             apiKey: get(config, 'apiKey'),

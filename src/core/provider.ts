@@ -5,6 +5,7 @@ import type {
     SupportedLanguage,
 } from 'algoliasearch';
 import type {BuildRun, EntryInfo, SearchProvider} from '@diplodoc/cli';
+import type {LogConsumer} from '@diplodoc/cli/lib/logger';
 import type {AlgoliaProviderConfig, AlgoliaRecord, DocumentMeta} from '../types';
 import type {AlgoliaMethod} from './utils';
 
@@ -75,7 +76,7 @@ export class AlgoliaProvider implements SearchProvider {
         }
 
         if (run?.logger) {
-            this.logger.pipe(run.logger);
+            this.logger.pipe(run.logger as unknown as LogConsumer);
         }
 
         try {
