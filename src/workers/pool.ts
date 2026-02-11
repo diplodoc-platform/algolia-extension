@@ -1,8 +1,4 @@
-import {Worker as NodeWorker} from 'worker_threads';
-import {join} from 'path';
-import {LogLevel, Logger} from '@diplodoc/cli/lib/logger';
-
-import {
+import type {
     AlgoliaRecord,
     DocumentMeta,
     ErrorMessage,
@@ -10,6 +6,10 @@ import {
     ResultMessage,
     WorkerMessage,
 } from '../types';
+
+import {Worker as NodeWorker} from 'worker_threads';
+import {join} from 'path';
+import {LogLevel, Logger} from '@diplodoc/cli/lib/logger';
 
 class WorkerPoolLogger extends Logger {
     worker = this.topic(LogLevel.INFO, 'WORKER_POOL');

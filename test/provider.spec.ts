@@ -2,35 +2,47 @@ import type {BuildRun} from '@diplodoc/cli';
 
 import {join} from 'path';
 import {algoliasearch} from 'algoliasearch';
+import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {AlgoliaProvider} from '../src/core/provider';
 import {AlgoliaProviderConfig} from '../src/types';
 
-jest.mock('algoliasearch');
+vi.mock('algoliasearch');
 
-jest.mock('../src/core/utils', () => {
+vi.mock('../src/core/utils', () => {
     return {
         ALGOLIA_METHODS: {
             REPLACE_ALL_OBJECTS: 'replaceAllObjects',
             SAVE_OBJECTS: 'saveObjects',
         },
-        IndexLogger: jest.fn().mockImplementation(() => ({
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-            pipe: jest.fn(),
+        IndexLogger: vi.fn().mockImplementation(() => ({
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
+            pipe: vi.fn(),
         })),
-        getBaseLang: jest.fn((lang) => (lang === 'ru' ? 'ru' : 'en')),
-        pageLink: jest.fn((lang) => join('_search', lang, 'index.html')),
-        uploadRecordsToAlgolia: jest
+        getBaseLang: vi.fn((lang: string) => (lang === 'ru' ? 'ru' : 'en')),
+        pageLink: vi.fn((lang: string) => join('_search', lang, 'index.html')),
+        uploadRecordsToAlgolia: vi
             .fn()
-            .mockImplementation(async (client, indexName, _lang, records, method) => {
-                await client[method]({
-                    indexName,
-                    objects: records,
-                });
-            }),
-        ensureClient: jest.fn((client) => client),
+            .mockImplementation(
+                async (
+                    client: unknown,
+                    indexName: string,
+                    _lang: string,
+                    records: unknown[],
+                    method: string,
+                ) => {
+                    const c = client as {
+                        [k: string]: (opts: {
+                            indexName: string;
+                            objects: unknown[];
+                        }) => Promise<unknown>;
+                    };
+                    await c[method]({indexName, objects: records});
+                },
+            ),
+        ensureClient: vi.fn((client: unknown) => client),
         DEFAULT_INDEX_SETTINGS: {
             distinct: 1,
             attributeForDistinct: 'url',
@@ -39,13 +51,13 @@ jest.mock('../src/core/utils', () => {
 });
 
 interface MockLogger {
-    info: jest.Mock;
-    warn: jest.Mock;
-    error: jest.Mock;
+    info: ReturnType<typeof vi.fn>;
+    warn: ReturnType<typeof vi.fn>;
+    error: ReturnType<typeof vi.fn>;
 }
 
 interface MockSearch {
-    page: jest.Mock;
+    page: ReturnType<typeof vi.fn>;
 }
 
 class MockBuildRun {
@@ -53,38 +65,40 @@ class MockBuildRun {
     output: string;
     logger: MockLogger;
     search: MockSearch;
-    glob: jest.Mock;
-    read: jest.Mock;
-    write: jest.Mock;
-    copy: jest.Mock;
+    glob: ReturnType<typeof vi.fn>;
+    read: ReturnType<typeof vi.fn>;
+    write: ReturnType<typeof vi.fn>;
+    copy: ReturnType<typeof vi.fn>;
 
     constructor(config: Record<string, unknown> = {}) {
         this.originalInput = (config.input as string) || '/test/input';
         this.output = (config.output as string) || '/test/output';
         this.logger = {
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
+            info: vi.fn(),
+            warn: vi.fn(),
+            error: vi.fn(),
         };
         this.search = {
-            page: jest.fn().mockResolvedValue('<html></html>'),
+            page: vi.fn().mockResolvedValue('<html></html>'),
         };
-        this.glob = jest.fn().mockResolvedValue([]);
-        this.read = jest.fn().mockResolvedValue('[]');
-        this.write = jest.fn().mockResolvedValue(undefined);
-        this.copy = jest.fn().mockResolvedValue(undefined);
+        this.glob = vi.fn().mockResolvedValue([]);
+        this.read = vi.fn().mockResolvedValue('[]');
+        this.write = vi.fn().mockResolvedValue(undefined);
+        this.copy = vi.fn().mockResolvedValue(undefined);
     }
 }
 
 const mockAlgoliaClient = {
-    setSettings: jest.fn().mockResolvedValue({}),
-    replaceAllObjects: jest.fn().mockResolvedValue({taskID: 123}),
-    saveObjects: jest.fn().mockResolvedValue({taskID: 456}),
-    clearObjects: jest.fn().mockResolvedValue({}),
-    waitForTask: jest.fn().mockResolvedValue({}),
+    setSettings: vi.fn().mockResolvedValue({}),
+    replaceAllObjects: vi.fn().mockResolvedValue({taskID: 123}),
+    saveObjects: vi.fn().mockResolvedValue({taskID: 456}),
+    clearObjects: vi.fn().mockResolvedValue({}),
+    waitForTask: vi.fn().mockResolvedValue({}),
 };
 
-(algoliasearch as jest.Mock).mockReturnValue(mockAlgoliaClient);
+vi.mocked(algoliasearch).mockReturnValue(
+    mockAlgoliaClient as unknown as ReturnType<typeof algoliasearch>,
+);
 
 describe('AlgoliaProvider', () => {
     let provider: AlgoliaProvider;
@@ -92,7 +106,7 @@ describe('AlgoliaProvider', () => {
     let config: AlgoliaProviderConfig;
 
     beforeEach(() => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         mockRun = new MockBuildRun();
         config = {
             appId: 'test-app-id',

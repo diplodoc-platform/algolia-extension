@@ -16,3 +16,4 @@ node_modules
 .prettierrc.js
 .stylelintrc.js
 esbuild/**/*.mjs
+src/client/search.js

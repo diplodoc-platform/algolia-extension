@@ -1,6 +1,13 @@
+import type {
+    AlgoliaRecord,
+    ErrorMessage,
+    ProcessMessage,
+    ResultMessage,
+    WorkerMessage,
+} from '../types';
+
 import {parentPort} from 'worker_threads';
 
-import {AlgoliaRecord, ErrorMessage, ProcessMessage, ResultMessage, WorkerMessage} from '../types';
 import {processDocument} from '../core/document-processor';
 
 if (!parentPort) {

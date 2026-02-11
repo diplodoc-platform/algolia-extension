@@ -1,8 +1,8 @@
+import type {AlgoliaRecord, DocumentProcessingContext, DocumentSection} from '../types';
+
 import {load} from 'cheerio';
 import {html2text} from '@diplodoc/search-extension/indexer';
 import {shortLink} from '@diplodoc/cli/lib/utils';
-
-import {AlgoliaRecord, DocumentProcessingContext, DocumentSection} from '../types';
 
 export function extractHeadings(html: string): string[] {
     const $ = load(html);

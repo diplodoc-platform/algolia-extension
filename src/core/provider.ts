@@ -5,18 +5,18 @@ import type {
     SupportedLanguage,
 } from 'algoliasearch';
 import type {BuildRun, EntryInfo, SearchProvider} from '@diplodoc/cli';
+import type {AlgoliaProviderConfig, AlgoliaRecord, DocumentMeta} from '../types';
+import type {AlgoliaMethod} from './utils';
 
 import {shortLink} from '@diplodoc/cli/lib/utils';
 import {algoliasearch} from 'algoliasearch';
 import {join} from 'path';
 
-import {AlgoliaProviderConfig, AlgoliaRecord, DocumentMeta} from '../types';
 import {AlgoliaWorkerPool} from '../workers';
 
 import {processDocument} from './document-processor';
 import {
     ALGOLIA_METHODS,
-    AlgoliaMethod,
     DEFAULT_INDEX_SETTINGS,
     IndexLogger,
     ensureClient,

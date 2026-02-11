@@ -1,14 +1,15 @@
-import type {BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
+import type {BaseArgs, BaseConfig, IExtension} from '@diplodoc/cli/lib/program';
+import type {Config, ExtendedOption} from '@diplodoc/cli/lib/config';
+import type {AlgoliaConfig} from './types';
 
-import {BaseArgs, BaseProgram, getHooks, withConfigDefaults} from '@diplodoc/cli/lib/program';
+import {BaseProgram, getHooks, withConfigDefaults} from '@diplodoc/cli/lib/program';
 import {getBuildHooks, getEntryHooks, getSearchHooks} from '@diplodoc/cli';
-import {Command, Config, ExtendedOption, defined} from '@diplodoc/cli/lib/config';
+import {Command, defined} from '@diplodoc/cli/lib/config';
 import {Run as BaseRun} from '@diplodoc/cli/lib/run';
 import {get} from 'lodash';
 
 import {AlgoliaProvider} from './core/provider';
 import {options} from './config';
-import {AlgoliaConfig} from './types';
 
 const API_LINK = '_search/api.js';
 

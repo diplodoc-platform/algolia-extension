@@ -1,10 +1,9 @@
 import type {Algoliasearch, IndexSettings, SupportedLanguage} from 'algoliasearch';
+import type {AlgoliaRecord} from '../types';
 
 import {uniq} from 'lodash';
 import {LogLevel, Logger} from '@diplodoc/cli/lib/logger';
 import {join} from 'path';
-
-import {AlgoliaRecord} from '../types';
 
 export const ALGOLIA_METHODS = {
     REPLACE_ALL_OBJECTS: 'replaceAllObjects' as const,
