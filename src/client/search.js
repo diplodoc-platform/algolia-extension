@@ -131,7 +131,10 @@ function format(config, result) {
             type: 'page',
             link: link,
             title:
-                (highlightResult && highlightResult.title && highlightResult.title.value) || title,
+                (highlightResult && highlightResult.section && highlightResult.section.value) ||
+                section ||
+                (highlightResult && highlightResult.title && highlightResult.title.value) ||
+                title,
             section: section,
             description: description,
         };
