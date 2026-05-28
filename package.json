@@ -1,6 +1,6 @@
 {
   "name": "@diplodoc/algolia-extension",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Algolia search integration extension for Diplodoc",
   "repository": {
     "type": "git",
