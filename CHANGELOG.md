@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/diplodoc-platform/algolia-extension/compare/v0.6.0...v0.6.1) (2026-05-28)
+
+
+### Bug Fixes
+
+* **deps:** updated node to 24 ([564ef5f](https://github.com/diplodoc-platform/algolia-extension/commit/564ef5f5c316e9224799cb3c637039522144b9af))
+
 ## [0.6.0](https://github.com/diplodoc-platform/algolia-extension/compare/v0.5.2...v0.6.0) (2026-03-16)
 
 
