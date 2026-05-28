@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.2](https://github.com/diplodoc-platform/algolia-extension/compare/v0.6.1...v0.6.2) (2026-05-28)
+
+
+### Bug Fixes
+
+* **deps:** Update @diplodoc/search-extension@3.0.6 ([4949d1d](https://github.com/diplodoc-platform/algolia-extension/commit/4949d1da5c7b7705e90ce9835c1c6b0255d5225c))
+* **deps:** Update @diplodoc/search-extension@3.0.6 ([13b8db4](https://github.com/diplodoc-platform/algolia-extension/commit/13b8db41eb8d77b338b225dfd7cd95478e049507))
+
 ## [0.6.1](https://github.com/diplodoc-platform/algolia-extension/compare/v0.6.0...v0.6.1) (2026-05-28)
 
 
