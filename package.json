@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@diplodoc/cli": "^5.12.5",
-    "@diplodoc/infra": "2.0.6",
+    "@diplodoc/infra": "2.0.7",
     "@diplodoc/tsconfig": "^1.0.2",
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.19.7",
