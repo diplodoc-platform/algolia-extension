@@ -45,7 +45,6 @@
   "devDependencies": {
     "@diplodoc/cli": "^5.12.5",
     "@diplodoc/infra": "2.2.0",
-    "@diplodoc/tsconfig": "^1.0.2",
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.19.7",
     "@vitest/coverage-v8": "^3.2.4",
