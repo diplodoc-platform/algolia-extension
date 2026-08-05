@@ -181,7 +181,7 @@ export class Extension implements IExtension {
                         const provider = this.createAlgoliaProvider(run, config);
 
                         getEntryHooks(run.entry).State.tap('AlgoliaSearch', (state) => {
-                            state.search = provider.config(state.lang);
+                            state.search = provider.config(state.lang, false);
                         });
 
                         getEntryHooks(run.entry).Page.tap('AlgoliaSearch', (template) => {

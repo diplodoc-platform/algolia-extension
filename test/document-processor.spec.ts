@@ -193,6 +193,7 @@ describe('Document Processor', () => {
                 title: 'Test Document',
                 meta: {
                     keywords: ['test', 'document'],
+                    tags: ['info', '_internal', 'syntax'],
                 },
             };
 
@@ -203,6 +204,8 @@ describe('Document Processor', () => {
             expect(records[0].lang).toBe('en');
             expect(records[0].url).toBe('test-path.html');
             expect(records[0].keywords).toEqual(['test', 'document']);
+            expect(records.every((record) => record.tags?.join(',') === 'info,syntax')).toBe(true);
+            expect(records.every((record) => !record.tags?.includes('_internal'))).toBe(true);
         });
 
         it('should handle document with no sections', () => {

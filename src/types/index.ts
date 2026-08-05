@@ -17,6 +17,7 @@ export interface AlgoliaRecord {
     content: string;
     headings: string[];
     keywords: string[];
+    tags?: string[];
     anchor?: string;
     url: string;
     lang: string;
@@ -34,6 +35,7 @@ export interface DocumentSection {
 export interface DocumentMeta {
     noIndex?: boolean;
     keywords?: string[];
+    tags?: string[];
     title?: string;
     description?: string;
     [key: string]: unknown;

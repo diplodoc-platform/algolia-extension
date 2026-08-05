@@ -5,6 +5,7 @@
 /* eslint-disable new-cap */
 /* eslint-disable no-console */
 /* eslint-env worker */
+/* global module */
 
 const DEFAULT_CONFIG = {
     tolerance: 3,
@@ -30,6 +31,8 @@ const NOT_INITIALIZED_API = {
     code: 'NOT_INITIALIZED',
 };
 
+const workerScope = typeof self === 'undefined' ? {} : self;
+
 function AssertConfig(config) {
     if (!config) {
         throw NOT_INITIALIZED_CONFIG;
@@ -42,20 +45,20 @@ function AssertApi(api) {
     }
 }
 
-self.api = {
+workerScope.api = {
     async init() {
-        self.config = Object.assign({}, DEFAULT_CONFIG, self.config);
+        workerScope.config = Object.assign({}, DEFAULT_CONFIG, workerScope.config);
     },
     async suggest(query, count = 10) {
-        AssertConfig(self.config);
-        const results = await search(self.config, query, count);
-        const formattedResults = format(self.config, results);
+        AssertConfig(workerScope.config);
+        const results = await search(workerScope.config, query, count);
+        const formattedResults = format(workerScope.config, results);
         return formattedResults;
     },
-    async search(query, count = 10, page = 1) {
-        AssertConfig(self.config);
-        const result = await search(self.config, query, count, page);
-        const formattedResults = format(self.config, result);
+    async search(query, count = 10, page = 1, tags = []) {
+        AssertConfig(workerScope.config);
+        const result = await search(workerScope.config, query, count, page, tags);
+        const formattedResults = format(workerScope.config, result);
         const total = result.nbHits || (result.hits ? result.hits.length : 0);
 
         return {
@@ -65,7 +68,7 @@ self.api = {
     },
 };
 
-async function search(config, query, count = 10, page = 1) {
+async function search(config, query, count = 10, page = 1, tags = []) {
     const appId = config.appId;
     const searchApiKey = config.searchApiKey;
     const indexName = config.indexName;
@@ -88,6 +91,7 @@ async function search(config, query, count = 10, page = 1) {
         highlightPreTag: `<span class="${markClass}">`,
         highlightPostTag: `</span>`,
     });
+    requestBody.filters = combineFilters(requestBody.filters, tags);
 
     const response = await fetch(url, {
         method: 'POST',
@@ -100,6 +104,22 @@ async function search(config, query, count = 10, page = 1) {
 
     const data = await response.json();
     return data;
+}
+
+function buildTagsFilter(tags) {
+    return tags
+        .map((tag) => `tags:"${String(tag).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)
+        .join(' OR ');
+}
+
+function combineFilters(filters, tags) {
+    const tagsFilter = buildTagsFilter(tags);
+
+    if (!tagsFilter) {
+        return filters;
+    }
+
+    return filters ? `(${filters}) AND (${tagsFilter})` : `(${tagsFilter})`;
 }
 
 function format(config, result) {
@@ -153,23 +173,23 @@ function trim(text, words) {
 
 const HANDLERS = {
     async init(config) {
-        self.config = config;
-        if (self.api && self.api.init) {
-            return self.api.init();
+        workerScope.config = config;
+        if (workerScope.api && workerScope.api.init) {
+            return workerScope.api.init();
         }
         return;
     },
     async suggest(data) {
         const {query, count = 10} = data;
-        AssertConfig(self.config);
-        AssertApi(self.api);
-        return self.api.suggest(query, count);
+        AssertConfig(workerScope.config);
+        AssertApi(workerScope.api);
+        return workerScope.api.suggest(query, count);
     },
     async search(data) {
-        const {query, count = 10, page = 1} = data;
-        AssertConfig(self.config);
-        AssertApi(self.api);
-        return self.api.search(query, count, page);
+        const {query, count = 10, page = 1, tags = []} = data;
+        AssertConfig(workerScope.config);
+        AssertApi(workerScope.api);
+        return workerScope.api.search(query, count, page, tags);
     },
 };
 
@@ -177,11 +197,11 @@ function reply(message, data) {
     if (message.ports && message.ports[0]) {
         message.ports[0].postMessage(data);
     } else {
-        self.postMessage(data);
+        workerScope.postMessage(data);
     }
 }
 
-self.onmessage = async function (message) {
+workerScope.onmessage = async function (message) {
     const type = message.data.type;
     const handler = HANDLERS[type];
 
@@ -200,3 +220,7 @@ self.onmessage = async function (message) {
         reply(message, {error});
     }
 };
+
+if (typeof module !== 'undefined') {
+    module.exports = {buildTagsFilter, combineFilters};
+}

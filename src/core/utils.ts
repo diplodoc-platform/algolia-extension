@@ -28,6 +28,24 @@ export function pageLink(lang: string): string {
     return join('_search', lang, `index.html`);
 }
 
+export function filterPublicTags(tags: string[] = []): string[] {
+    return tags.filter((tag) => !tag.startsWith('_'));
+}
+
+export function collectTags(records: AlgoliaRecord[]): string[] {
+    return uniq(records.flatMap((record) => filterPublicTags(record.tags))).sort();
+}
+
+export function withTagsFacet(settings: Partial<IndexSettings>): Partial<IndexSettings> {
+    return {
+        ...settings,
+        attributesForFaceting: uniq([
+            ...(settings.attributesForFaceting || []),
+            'filterOnly(tags)',
+        ]),
+    };
+}
+
 export async function uploadRecordsToAlgolia(
     client: Algoliasearch,
     indexName: string,
@@ -45,12 +63,12 @@ export async function uploadRecordsToAlgolia(
     try {
         await client.setSettings({
             indexName,
-            indexSettings: {
+            indexSettings: withTagsFacet({
                 ...defaultSettings,
                 ...indexSettings,
                 customRanking: ['asc(level)'],
                 indexLanguages: uniq([lang, baseLang]) as SupportedLanguage[],
-            },
+            }),
         });
 
         const result = await client[method]({
@@ -116,4 +134,5 @@ export function ensureClient(client?: Algoliasearch): Algoliasearch {
 export const DEFAULT_INDEX_SETTINGS: IndexSettings = {
     distinct: 1,
     attributeForDistinct: 'url',
+    attributesForFaceting: ['filterOnly(tags)'],
 };
