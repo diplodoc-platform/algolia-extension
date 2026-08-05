@@ -33,16 +33,17 @@ export function filterPublicTags(tags: string[] = []): string[] {
 }
 
 export function collectTags(records: AlgoliaRecord[]): string[] {
-    return uniq(records.flatMap((record) => filterPublicTags(record.tags))).sort();
+    const tags = new Set(records.flatMap((record) => filterPublicTags(record.tags)));
+
+    return [...tags].sort((left, right) => left.localeCompare(right));
 }
 
 export function withTagsFacet(settings: Partial<IndexSettings>): Partial<IndexSettings> {
     return {
         ...settings,
-        attributesForFaceting: uniq([
-            ...(settings.attributesForFaceting || []),
-            'filterOnly(tags)',
-        ]),
+        attributesForFaceting: [
+            ...new Set([...(settings.attributesForFaceting || []), 'filterOnly(tags)']),
+        ],
     };
 }
 

@@ -223,6 +223,21 @@ describe('Document Processor', () => {
             expect(records[0].content).toContain('Just a paragraph');
         });
 
+        it('keeps public tags on a single record when the document is empty', () => {
+            const context: DocumentProcessingContext = {
+                path: 'test-path.md',
+                lang: 'en',
+                html: '',
+                title: 'Test Document',
+                meta: {tags: ['info', '_internal', 'syntax']},
+            };
+
+            const records = processDocument(context);
+
+            expect(records).toHaveLength(1);
+            expect(records[0].tags).toEqual(['info', 'syntax']);
+        });
+
         it('should skip documents marked as noIndex', () => {
             const context: DocumentProcessingContext = {
                 path: 'test-path.md',

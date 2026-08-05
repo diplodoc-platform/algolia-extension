@@ -47,7 +47,7 @@ function AssertApi(api) {
 
 workerScope.api = {
     async init() {
-        workerScope.config = Object.assign({}, DEFAULT_CONFIG, workerScope.config);
+        workerScope.config = {...DEFAULT_CONFIG, ...workerScope.config};
     },
     async suggest(query, count = 10) {
         AssertConfig(workerScope.config);
@@ -107,9 +107,7 @@ async function search(config, query, count = 10, page = 1, tags = []) {
 }
 
 function buildTagsFilter(tags) {
-    return tags
-        .map((tag) => `tags:"${String(tag).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)
-        .join(' OR ');
+    return tags.map((tag) => `tags:${JSON.stringify(String(tag))}`).join(' OR ');
 }
 
 function combineFilters(filters, tags) {
@@ -174,7 +172,7 @@ function trim(text, words) {
 const HANDLERS = {
     async init(config) {
         workerScope.config = config;
-        if (workerScope.api && workerScope.api.init) {
+        if (workerScope.api?.init) {
             return workerScope.api.init();
         }
         return;
@@ -222,5 +220,5 @@ workerScope.onmessage = async function (message) {
 };
 
 if (typeof module !== 'undefined') {
-    module.exports = {buildTagsFilter, combineFilters};
+    module.exports = {buildTagsFilter, combineFilters, search, workerScope};
 }
