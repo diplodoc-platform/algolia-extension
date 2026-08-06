@@ -43,9 +43,14 @@ vi.mock('../src/core/utils', () => {
                 },
             ),
         ensureClient: vi.fn((client: unknown) => client),
+        collectTags: vi.fn((records: Array<{tags?: string[]}>) =>
+            [...new Set(records.flatMap((record) => record.tags || []))].sort(),
+        ),
+        withTagsFacet: vi.fn((settings: object) => settings),
         DEFAULT_INDEX_SETTINGS: {
             distinct: 1,
             attributeForDistinct: 'url',
+            attributesForFaceting: ['filterOnly(tags)'],
         },
     };
 });
@@ -207,7 +212,24 @@ describe('AlgoliaProvider', () => {
                 indexName: 'test-index-en',
                 searchApiKey: 'test-search-api-key',
                 querySettings: {},
+                tags: [],
             });
+        });
+
+        it('returns unique tags for the selected language', () => {
+            const objects = (
+                provider as unknown as {
+                    objects: Record<string, Array<{tags?: string[]}>>;
+                }
+            ).objects;
+            objects.en = [{tags: ['syntax', 'info']}, {tags: ['info']}];
+            objects.ru = [{tags: ['другое']}];
+
+            expect(provider.config('en').tags).toEqual(['info', 'syntax']);
+        });
+
+        it('can omit the tag list from regular page search config', () => {
+            expect(provider.config('en', false)).not.toHaveProperty('tags');
         });
 
         it('should include custom query settings if provided', () => {

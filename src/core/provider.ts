@@ -20,10 +20,12 @@ import {
     ALGOLIA_METHODS,
     DEFAULT_INDEX_SETTINGS,
     IndexLogger,
+    collectTags,
     ensureClient,
     getBaseLang,
     pageLink,
     uploadRecordsToAlgolia,
+    withTagsFacet,
 } from './utils';
 
 export class AlgoliaProvider implements SearchProvider {
@@ -162,11 +164,11 @@ export class AlgoliaProvider implements SearchProvider {
 
             await client.setSettings({
                 indexName,
-                indexSettings: {
+                indexSettings: withTagsFacet({
                     ...DEFAULT_INDEX_SETTINGS,
                     ...settings,
                     indexLanguages: [lang, baseLang] as SupportedLanguage[],
-                },
+                }),
             });
         }
     }
@@ -216,7 +218,7 @@ export class AlgoliaProvider implements SearchProvider {
         }
     }
 
-    config(lang: string) {
+    config(lang: string, includeTags = true) {
         const skipHtmlExtension = this.run.config?.skipHtmlExtension;
 
         const url = pageLink(lang);
@@ -230,6 +232,7 @@ export class AlgoliaProvider implements SearchProvider {
             indexName: this.createIndexName(lang),
             searchApiKey: this.searchApiKey,
             querySettings: this.querySettings,
+            ...(includeTags && {tags: collectTags(this.objects[lang] || [])}),
         };
     }
 
