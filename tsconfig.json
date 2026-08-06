@@ -7,7 +7,6 @@
     "outDir": "./dist",
     "skipLibCheck": true,
     "moduleResolution": "nodenext",
-    "baseUrl": ".",
     "sourceMap": true,
     "experimentalDecorators": false,
     "rootDir": "./src"
