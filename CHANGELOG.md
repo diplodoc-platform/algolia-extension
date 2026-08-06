@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/diplodoc-platform/algolia-extension/compare/v0.6.2...v0.7.0) (2026-08-06)
+
+
+### Features
+
+* added page tags ([#49](https://github.com/diplodoc-platform/algolia-extension/issues/49)) ([e22a299](https://github.com/diplodoc-platform/algolia-extension/commit/e22a2991c2de3543c41ba01c6b226d9d66993973))
+
 ## [0.6.2](https://github.com/diplodoc-platform/algolia-extension/compare/v0.6.1...v0.6.2) (2026-05-28)
 
 
