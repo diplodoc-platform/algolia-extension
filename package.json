@@ -43,7 +43,7 @@
     "ts-dedent": "^2.2.0"
   },
   "devDependencies": {
-    "@diplodoc/cli": "^5.12.5",
+    "@diplodoc/cli": "^5.53.0",
     "@diplodoc/infra": "2.2.3",
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.19.7",
