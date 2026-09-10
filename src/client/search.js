@@ -57,18 +57,38 @@ workerScope.api = {
     },
     async search(query, count = 10, page = 1, tags = []) {
         AssertConfig(workerScope.config);
-        const result = await search(workerScope.config, query, count, page, tags);
+        const [result, facetsResult] = await Promise.all([
+            search(workerScope.config, query, count, page, tags, !tags.length),
+            tags.length
+                ? search(workerScope.config, query, 0, 1, [], true).catch(() => null)
+                : null,
+        ]);
+        const facets = tags.length ? facetsResult : result;
+        const tagCounts = facets?.facets?.tags || (facets?.nbHits === 0 ? {} : undefined);
+        const complete =
+            facets?.exhaustiveFacetsCount !== false &&
+            facets?.exhaustive?.facetsCount !== false &&
+            facets?.exhaustive?.facetValues !== false &&
+            tagCounts &&
+            Object.keys(tagCounts).length < 1000;
         const formattedResults = format(workerScope.config, result);
         const total = result.nbHits || (result.hits ? result.hits.length : 0);
 
         return {
             items: formattedResults,
             total: total,
+            ...(complete
+                ? {
+                      tagCounts: Object.fromEntries(
+                          Object.entries(tagCounts).filter(([tag]) => !tag.startsWith('_')),
+                      ),
+                  }
+                : {}),
         };
     },
 };
 
-async function search(config, query, count = 10, page = 1, tags = []) {
+async function search(config, query, count = 10, page = 1, tags = [], withTagCounts = false) {
     const appId = config.appId;
     const searchApiKey = config.searchApiKey;
     const indexName = config.indexName;
@@ -93,6 +113,12 @@ async function search(config, query, count = 10, page = 1, tags = []) {
     });
     requestBody.filters = combineFilters(requestBody.filters, tags);
 
+    if (withTagCounts) {
+        requestBody.facets = ['tags'];
+        requestBody.maxValuesPerFacet = 1000;
+        requestBody.facetingAfterDistinct = true;
+    }
+
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -103,6 +129,15 @@ async function search(config, query, count = 10, page = 1, tags = []) {
     });
 
     const data = await response.json();
+
+    if (response.ok === false) {
+        if (withTagCounts && /facet/i.test(data.message || '')) {
+            return search(config, query, count, page, tags);
+        }
+
+        throw new Error(data.message || 'Search request failed');
+    }
+
     return data;
 }
 
