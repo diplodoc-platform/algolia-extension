@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.2](https://github.com/diplodoc-platform/algolia-extension/compare/v0.7.1...v0.7.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* add search tag facet counts ([#55](https://github.com/diplodoc-platform/algolia-extension/issues/55)) ([7c1b46c](https://github.com/diplodoc-platform/algolia-extension/commit/7c1b46c7381cdac94fc73b9ef4684daeeedfaf4d))
+* **deps:** Update @diplodoc/search-extension@3.1.2 ([#56](https://github.com/diplodoc-platform/algolia-extension/issues/56)) ([2b87999](https://github.com/diplodoc-platform/algolia-extension/commit/2b879997d204c09e362f046da1daa173d4fce4df))
+
 ## [0.7.1](https://github.com/diplodoc-platform/algolia-extension/compare/v0.7.0...v0.7.1) (2026-08-13)
 
 
