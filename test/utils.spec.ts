@@ -18,9 +18,11 @@ describe('Algolia tag utilities', () => {
         expect(collectTags(records)).toEqual(['info', 'reference', 'syntax']);
     });
 
-    it('adds tags as a filter-only facet without dropping custom facets', () => {
-        expect(withTagsFacet({attributesForFaceting: ['category']})).toMatchObject({
-            attributesForFaceting: ['category', 'filterOnly(tags)'],
+    it('enables tag counts and replaces the old filter-only facet without dropping custom facets', () => {
+        expect(
+            withTagsFacet({attributesForFaceting: ['category', 'filterOnly(tags)']}),
+        ).toMatchObject({
+            attributesForFaceting: ['category', 'tags'],
         });
     });
 });

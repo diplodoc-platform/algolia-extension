@@ -42,7 +42,12 @@ export function withTagsFacet(settings: Partial<IndexSettings>): Partial<IndexSe
     return {
         ...settings,
         attributesForFaceting: [
-            ...new Set([...(settings.attributesForFaceting || []), 'filterOnly(tags)']),
+            ...new Set([
+                ...(settings.attributesForFaceting || []).filter(
+                    (facet) => facet !== 'filterOnly(tags)',
+                ),
+                'tags',
+            ]),
         ],
     };
 }
@@ -135,5 +140,5 @@ export function ensureClient(client?: Algoliasearch): Algoliasearch {
 export const DEFAULT_INDEX_SETTINGS: IndexSettings = {
     distinct: 1,
     attributeForDistinct: 'url',
-    attributesForFaceting: ['filterOnly(tags)'],
+    attributesForFaceting: ['tags'],
 };

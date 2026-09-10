@@ -1,5 +1,4 @@
 import {createRequire} from 'node:module';
-
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 const require = createRequire(import.meta.url);
@@ -126,6 +125,63 @@ describe('Algolia worker message handling', () => {
         expect(reply.result).toMatchObject({total: 0});
         const body = JSON.parse(fetchMock.mock.calls[0][1].body);
         expect(body.filters).toBe('(tags:"info")');
+    });
+
+    it('counts query matches without selected tags while preserving the base filter', async () => {
+        const fetchMock = vi.fn().mockImplementation((_url, options) => {
+            const body = JSON.parse(options.body);
+            const filtered = body.filters.includes('tags:');
+
+            return Promise.resolve({
+                json: () =>
+                    Promise.resolve(
+                        filtered
+                            ? {hits: [], nbHits: 0}
+                            : {hits: [], nbHits: 7, facets: {tags: {info: 5, meta: 2}}},
+                    ),
+            });
+        });
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        await post({type: 'init', ...config, querySettings: {filters: 'visibility:public'}});
+        const reply = await post({type: 'search', query: 'meta', tags: ['guide']});
+
+        expect(reply).toMatchObject({result: {total: 0, tagCounts: {info: 5, meta: 2}}});
+        expect(fetchMock.mock.calls.map(([, options]) => JSON.parse(options.body))).toEqual([
+            expect.objectContaining({
+                query: 'meta',
+                filters: '(visibility:public) AND (tags:"guide")',
+            }),
+            expect.objectContaining({
+                query: 'meta',
+                filters: 'visibility:public',
+                hitsPerPage: 0,
+                facets: ['tags'],
+                facetingAfterDistinct: true,
+            }),
+        ]);
+    });
+
+    it('keeps search results when an old index cannot return tag facets', async () => {
+        const fetchMock = vi
+            .fn()
+            .mockResolvedValueOnce({
+                ok: false,
+                json: () => Promise.resolve({message: 'Cannot facet on filterOnly(tags)'}),
+            })
+            .mockResolvedValueOnce({
+                ok: true,
+                json: () => Promise.resolve({hits: [{url: 'meta.html', title: 'Meta'}], nbHits: 1}),
+            });
+
+        vi.stubGlobal('fetch', fetchMock);
+
+        await post({type: 'init', ...config});
+        const reply = await post({type: 'search', query: 'meta'});
+
+        expect(reply).toMatchObject({result: {total: 1, items: [{title: 'Meta'}]}});
+        expect(JSON.parse(fetchMock.mock.calls[1][1].body)).not.toHaveProperty('facets');
     });
 
     it('logs an error for an unknown message type', async () => {
