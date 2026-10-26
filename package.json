@@ -44,7 +44,7 @@
   },
   "devDependencies": {
     "@diplodoc/cli": "^5.53.0",
-    "@diplodoc/infra": "2.2.3",
+    "@diplodoc/infra": "2.3.0",
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.19.7",
     "@vitest/coverage-v8": "^3.2.4",
