@@ -36,14 +36,14 @@
     "lock": "npm install --no-workspaces --package-lock-only --ignore-scripts"
   },
   "dependencies": {
-    "@diplodoc/search-extension": "^3.1.2",
+    "@diplodoc/search-extension": "^3.1.4",
     "algoliasearch": "^5.24.0",
     "cheerio": "^1.0.0",
     "lodash": "^4.17.21",
     "ts-dedent": "^2.2.0"
   },
   "devDependencies": {
-    "@diplodoc/cli": "^5.53.0",
+    "@diplodoc/cli": "^5.64.0",
     "@diplodoc/infra": "2.3.0",
     "@types/lodash": "^4.14.202",
     "@types/node": "^22.19.7",
