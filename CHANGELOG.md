@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.3](https://github.com/diplodoc-platform/algolia-extension/compare/v0.7.2...v0.7.3) (2026-10-29)
+
+
+### Bug Fixes
+
+* complete Algolia worker tasks ([#65](https://github.com/diplodoc-platform/algolia-extension/issues/65)) ([de20988](https://github.com/diplodoc-platform/algolia-extension/commit/de209882a736a828b9886425464f94427e8bb241))
+
 ## [0.7.2](https://github.com/diplodoc-platform/algolia-extension/compare/v0.7.1...v0.7.2) (2026-09-10)
 
 
