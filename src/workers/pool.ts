@@ -18,11 +18,16 @@ class WorkerPoolLogger extends Logger {
 export class AlgoliaWorkerPool {
     private workers: NodeWorker[] = [];
     private queue: ProcessMessage[] = [];
-    private processing = false;
+    private busyWorkers = new Set<NodeWorker>();
+    private failure?: Error;
+    private terminating = false;
     private readonly maxWorkers: number;
     private readonly workerPath: string;
     private results: Map<string, AlgoliaRecord[]> = new Map();
-    private resolvePromise: ((value: Map<string, AlgoliaRecord[]>) => void) | null = null;
+    private waiters: {
+        resolve: (value: Map<string, AlgoliaRecord[]>) => void;
+        reject: (error: Error) => void;
+    }[] = [];
     private logger = new WorkerPoolLogger();
 
     constructor(maxWorkers = 4) {
@@ -50,6 +55,10 @@ export class AlgoliaWorkerPool {
         meta: DocumentMeta,
         skipHtmlExtension?: boolean,
     ): void {
+        if (this.failure) {
+            throw this.failure;
+        }
+
         const message: ProcessMessage = {
             type: 'process',
             data: {
@@ -64,22 +73,26 @@ export class AlgoliaWorkerPool {
 
         this.queue.push(message);
 
-        if (!this.processing) {
-            this.startProcessing();
-        }
+        this.startProcessing();
     }
 
     async waitForCompletion(): Promise<Map<string, AlgoliaRecord[]>> {
-        if (this.queue.length === 0 && !this.processing) {
+        if (this.failure) {
+            throw this.failure;
+        }
+
+        if (this.queue.length === 0 && this.busyWorkers.size === 0) {
             return this.results;
         }
 
-        return new Promise<Map<string, AlgoliaRecord[]>>((resolve) => {
-            this.resolvePromise = resolve;
+        return new Promise<Map<string, AlgoliaRecord[]>>((resolve, reject) => {
+            this.waiters.push({resolve, reject});
         });
     }
 
     async terminate(): Promise<void> {
+        this.terminating = true;
+
         try {
             this.workers.forEach((worker) => {
                 try {
@@ -108,14 +121,12 @@ export class AlgoliaWorkerPool {
         });
 
         worker.on('error', (error) => {
-            this.logger.error(`Worker error:`, error);
-            this.replaceWorker(worker);
+            this.fail(error);
         });
 
         worker.on('exit', (code) => {
-            if (code !== 0) {
-                this.logger.error(`Worker exited with code ${code}`);
-                this.replaceWorker(worker);
+            if (!this.terminating) {
+                this.fail(new Error(`Worker exited with code ${code}`));
             }
         });
 
@@ -123,6 +134,12 @@ export class AlgoliaWorkerPool {
     }
 
     private handleWorkerMessage(worker: NodeWorker, message: WorkerMessage): void {
+        if (this.failure || this.terminating) {
+            return;
+        }
+
+        this.busyWorkers.delete(worker);
+
         switch (message.type) {
             case 'result': {
                 const resultMessage = message as ResultMessage;
@@ -145,41 +162,40 @@ export class AlgoliaWorkerPool {
 
             case 'error': {
                 const errorMessage = message as ErrorMessage;
-                this.logger.error(`Processing error:`, errorMessage.data.message);
-                this.processNextItem(worker);
+                this.fail(new Error(errorMessage.data.message));
                 break;
             }
 
             default:
-                this.logger.warn(`Unknown message type: ${message.type}`);
-                this.processNextItem(worker);
+                this.fail(new Error(`Unknown message type: ${message.type}`));
         }
 
         this.checkCompletion();
     }
 
-    private replaceWorker(oldWorker: NodeWorker): void {
-        const index = this.workers.indexOf(oldWorker);
-        if (index !== -1) {
-            this.workers.splice(index, 1);
-
-            const newWorker = this.createWorker();
-            this.workers.push(newWorker);
-
-            this.processNextItem(newWorker);
+    private fail(error: unknown): void {
+        if (this.failure || this.terminating) {
+            return;
         }
+
+        this.failure = error instanceof Error ? error : new Error(String(error));
+        this.checkCompletion();
     }
 
     private processNextItem(worker: NodeWorker): void {
+        if (this.failure || this.terminating || this.busyWorkers.has(worker)) {
+            return;
+        }
+
         if (this.queue.length > 0) {
             const task = this.queue.shift();
             if (task) {
+                this.busyWorkers.add(worker);
+
                 try {
                     worker.postMessage(task);
                 } catch (error) {
-                    this.logger.error(`Error sending task to worker:`, error);
-                    this.queue.unshift(task);
-                    this.replaceWorker(worker);
+                    this.fail(error);
                 }
             }
         }
@@ -190,18 +206,22 @@ export class AlgoliaWorkerPool {
             return;
         }
 
-        this.processing = true;
-
         for (const worker of this.workers) {
             this.processNextItem(worker);
         }
     }
 
     private checkCompletion(): void {
-        if (this.queue.length === 0 && this.resolvePromise) {
-            this.processing = false;
-            this.resolvePromise(this.results);
-            this.resolvePromise = null;
+        if (!this.failure && (this.queue.length > 0 || this.busyWorkers.size > 0)) {
+            return;
+        }
+
+        for (const {resolve, reject} of this.waiters.splice(0)) {
+            if (this.failure) {
+                reject(this.failure);
+            } else {
+                resolve(this.results);
+            }
         }
     }
 }
