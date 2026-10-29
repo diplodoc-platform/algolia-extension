@@ -175,14 +175,16 @@ export class AlgoliaProvider implements SearchProvider {
 
     async release(): Promise<void> {
         if (this.workerPool) {
-            const results = await this.workerPool.waitForCompletion();
+            try {
+                const results = await this.workerPool.waitForCompletion();
 
-            for (const [lang, records] of results.entries()) {
-                this.objects[lang] = this.objects[lang] || [];
-                this.objects[lang].push(...records);
+                for (const [lang, records] of results.entries()) {
+                    this.objects[lang] = this.objects[lang] || [];
+                    this.objects[lang].push(...records);
+                }
+            } finally {
+                await this.workerPool.terminate();
             }
-
-            await this.workerPool.terminate();
         }
 
         for (const lang of Object.keys(this.objects)) {

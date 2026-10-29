@@ -6,6 +6,7 @@ import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {AlgoliaProvider} from '../src/core/provider';
 import {AlgoliaProviderConfig} from '../src/types';
+import {AlgoliaWorkerPool} from '../src/workers';
 
 vi.mock('algoliasearch');
 
@@ -122,6 +123,26 @@ describe('AlgoliaProvider', () => {
         };
 
         provider = new AlgoliaProvider(mockRun as unknown as BuildRun, config);
+    });
+
+    it('terminates workers when indexing fails', async () => {
+        const error = new Error('Worker failed');
+        const wait = vi
+            .spyOn(AlgoliaWorkerPool.prototype, 'waitForCompletion')
+            .mockRejectedValue(error);
+        const terminate = vi
+            .spyOn(AlgoliaWorkerPool.prototype, 'terminate')
+            .mockResolvedValue(undefined);
+
+        try {
+            await expect(provider.release()).rejects.toThrow(error);
+
+            expect(terminate).toHaveBeenCalledOnce();
+            expect(mockRun.write).not.toHaveBeenCalled();
+        } finally {
+            wait.mockRestore();
+            terminate.mockRestore();
+        }
     });
 
     describe('constructor', () => {
