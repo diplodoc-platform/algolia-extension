@@ -46,7 +46,7 @@
     "@diplodoc/cli": "^5.64.1",
     "@diplodoc/infra": "2.3.0",
     "@types/lodash": "^4.14.202",
-    "@types/node": "^22.19.7",
+    "@types/node": "^26.6.4",
     "@vitest/coverage-v8": "^3.2.4",
     "typescript": "6.0.3",
     "vitest": "^3.2.4"
