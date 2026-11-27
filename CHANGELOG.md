@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.5](https://github.com/diplodoc-platform/algolia-extension/compare/v0.7.4...v0.7.5) (2026-11-27)
+
+
+### Bug Fixes
+
+* **ci:** verify prepared dependency pull requests safely ([2202811](https://github.com/diplodoc-platform/algolia-extension/commit/220281122ac48b13bccf90398dc1d89f92c9be7d))
+
 ## [0.7.4](https://github.com/diplodoc-platform/algolia-extension/compare/v0.7.3...v0.7.4) (2026-10-29)
 
 
